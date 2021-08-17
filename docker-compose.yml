@@ -1,0 +1,15 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  db:
+    image: "postgres:13"
+    environment:
+      POSTGRES_DB: billing
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_vol:/var/lib/comparing/data
+    ports:
+      - "${DB_PORTS}:5432"
+
+volumes:
+  db_vol: { }
