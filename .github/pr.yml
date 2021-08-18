@@ -1,0 +1,61 @@
+# This workflow will install Python dependencies, lint with a variety of Python versions,
+# and will send message to appropriate telegram channel with status
+
+name: PR workflow
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.8, 3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements/ci.txt
+      - name: Install dependencies code-style
+      	run: |
+      	  python -m pip install -r requirements/code-style.txt
+      - name: Run code-style check
+      	run: |
+      	  black --check .
+      	  isort --ckeck .
+      - name: Wemake Python Stylguide
+        id: wemake
+        uses: wemake-services/wemake-python-styleguide@0.15.3
+      - name: Mypy Check
+        id: mypy
+        run: mypy --html-report ./output/test .
+        #        mypy --install-types --non-interactive --html-report ./output .
+      - name: Archive linter results
+        uses: actions/upload-artifact@v2
+        with:
+          name: linter-report
+          path: output/test/index.html
+      - name: Notify Success In Telegram Channel
+        if: ${{ steps.wemake.outcome == 'success' }} and ${{ steps.mypy.outcome == 'success' }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.chat }}
+          token: ${{ secrets.token }}
+          args: Repo ${{ github.repository }} commit ${{ github.sha }} on Python version ${{ matrix.python-version }} triggered successfully.
+      - name: Notify Failure In Telegram Channel
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.chat }}
+          token: ${{ secrets.token }}
+          args: Repo ${{ github.repository }} commit ${{ github.sha }} on Python version ${{ matrix.python-version }} triggered with error, wemake ${{ steps.wemake.outcome }}, mypy ${{ steps.mypy.outcome }}.
