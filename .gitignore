@@ -1,0 +1,32 @@
+# Pytest
+.pytest_cache/
+
+# Byte-compiled / optimized / DLL files
+*/__pycache__
+__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+
+# C extensions
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pycharm files
+.idea
+
+# CI
+output/test/*
