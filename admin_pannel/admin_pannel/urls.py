@@ -16,6 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from admin_pannel.settings import DEBUG
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+
+if DEBUG:
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    urlpatterns += staticfiles_urlpatterns()
