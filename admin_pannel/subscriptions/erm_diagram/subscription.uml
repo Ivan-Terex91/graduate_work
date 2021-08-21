@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>DATABASE</ID>
+  <OriginalElement>28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.SCHEMA:movies.subscription</OriginalElement>
+  <nodes>
+    <node x="322.0" y="66.0">28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.sub</node>
+    <node x="104.5" y="326.0">28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.sub_film_work</node>
+    <node x="0.0" y="0.0">28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.content.film_work</node>
+    <node x="276.5" y="304.0">28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.order</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.sub_film_work" target="28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.sub" relationship="REFERENCES">
+      <point x="38.0" y="-50.0" />
+      <point x="218.5" y="279.0" />
+      <point x="387.5" y="279.0" />
+      <point x="0.0" y="61.0" />
+    </edge>
+    <edge source="28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.sub_film_work" target="28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.content.film_work" relationship="REFERENCES">
+      <point x="-38.0" y="-50.0" />
+      <point x="0.0" y="127.0" />
+    </edge>
+    <edge source="28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.order" target="28f02fa8-c2bc-48e7-b6da-8ce05c15c8ca.TABLE:movies.subscription.sub" relationship="REFERENCES">
+      <point x="0.0" y="-72.0" />
+      <point x="0.0" y="61.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic" zoom="0.8034188034188035" showDependencies="false" x="249.5" y="224.0" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Columns</Category>
+    <Category>Key columns</Category>
+    <Category>Virtual foreign keys</Category>
+  </Categories>
+</Diagram>
+

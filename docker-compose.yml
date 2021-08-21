@@ -3,7 +3,7 @@ services:
   db:
     image: "postgres:13"
     environment:
-      POSTGRES_DB: billing
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
@@ -16,6 +16,22 @@ services:
       timeout: 5s
       retries: 5
 
+  etl_sqlite_pg:
+    build: sqlite_to_postgres
+    links:
+      - db
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - dbname=${DB_NAME}
+      - db_user=${DB_USER}
+      - db_password=${DB_PASSWORD}
+      - db_host=db
+      - db_port=5432
+      - sqlite_file=${SQLITE_FILE}
+      - batch_size=${BATCH_SIZE}
+
   admin_pannel:
     build: admin_pannel
     volumes:
@@ -26,7 +42,7 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
-      DATABASE_URL: psql://${DB_USER}:${DB_PASSWORD}@db:5432/billing
+      DATABASE_URL: psql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
     expose:
       - "8000"
     ports:

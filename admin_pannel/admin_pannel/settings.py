@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-    'subscriptions'
+    'subscriptions',
+    'movies',
 ]
 
 MIDDLEWARE = [
