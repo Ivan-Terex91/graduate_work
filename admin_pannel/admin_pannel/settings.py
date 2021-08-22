@@ -1,12 +1,12 @@
 from pathlib import Path
-import environ
 
+import environ
 
 env = environ.Env(
     DEBUG=(bool, False)
 )
 
-environ.Env.read_env('.env')
+environ.Env.read_env('../.env')
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,7 +16,8 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
-    '127.0.0.1'
+    '127.0.0.1',
+    'localhost'
 ]
 
 INSTALLED_APPS = [
@@ -27,6 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'health_check',
+    'health_check.db',
+    'django_celery_results',
+    'django_celery_beat',
     'subscriptions',
     'movies',
 ]
@@ -62,7 +67,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'admin_pannel.wsgi.application'
 
 DATABASES = {
-    'default': env.db(),
+    'default': {
+        'NAME': env('DB_NAME'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST', default='127.0.0.1'),
+        'PORT': env('DB_PORT'),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -93,3 +105,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+RMQ_HOST = env('RMQ_HOST', default='127.0.0.1')
+RMQ_PORT = env('RMQ_PORT')
+RMQ_USER = env('RMQ_USER')
+RMQ_PASS = env('RMQ_PASS')
+BROKER_URL = f'amqp://{RMQ_USER}:{RMQ_PASS}@{RMQ_HOST}:{RMQ_PORT}//'
+CELERY_RESULT_BACKEND = 'django-db'

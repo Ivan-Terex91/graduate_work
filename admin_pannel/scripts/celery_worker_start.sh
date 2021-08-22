@@ -1,0 +1,1 @@
+celery -A admin_pannel worker -l info

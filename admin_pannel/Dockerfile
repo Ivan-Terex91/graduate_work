@@ -7,4 +7,4 @@ RUN pip install -r requirements.txt
 COPY . .
 
 
-CMD ["bash", "django-entrypoint.sh"]
+CMD ["bash", "scripts/django-entrypoint.sh"]

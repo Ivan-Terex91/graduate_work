@@ -1,15 +1,20 @@
 version: "3.9"  # optional since v1.27.0
 services:
   db:
+    container_name: db
+    hostname: db
     image: "postgres:13"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - db_vol:/var/lib/comparing/data
+    networks:
+      - main
     ports:
       - "${DB_PORT}:5432"
+    restart: on-failure
+    volumes:
+      - db_vol:/var/lib/comparing/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
       interval: 10s
@@ -18,11 +23,12 @@ services:
 
   etl_sqlite_pg:
     build: sqlite_to_postgres
-    links:
-      - db
+    container_name: etl_sqlite_pg
     depends_on:
       db:
         condition: service_healthy
+    hostname: etl_sqlite_pg
+    image: etl_sqlite_pg_image
     environment:
       - dbname=${DB_NAME}
       - db_user=${DB_USER}
@@ -31,22 +37,120 @@ services:
       - db_port=5432
       - sqlite_file=${SQLITE_FILE}
       - batch_size=${BATCH_SIZE}
+    networks:
+      - main
+
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RMQ_PASS}
+      - RABBITMQ_DEFAULT_VHOST=/
+    networks:
+      - main
+    ports:
+      - "${RMQ_PORT}:5672"
+    restart: on-failure
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 5
 
   admin_pannel:
     build: admin_pannel
-    volumes:
-      - ./admin_pannel/static:/admin_pannel/static
+    container_name: admin_pannel
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    expose:
+      - "8000"
+    hostname: admin_pannel
+    image: admin_pannel_image
     environment:
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: ${DEBUG}
-      DATABASE_URL: psql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-    expose:
-      - "8000"
+
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+
+      RMQ_USER: ${RMQ_USER}
+      RMQ_PASS: ${RMQ_PASS}
+      RMQ_PORT: ${RMQ_PORT}
+    networks:
+      - main
     ports:
       - "8000:8000"
+    restart: on-failure
+    volumes:
+      - ./admin_pannel/static:/admin_pannel/static
+    healthcheck:
+      test: [ "CMD-SHELL", "bash scripts/django_health_check.sh" ]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+
+  celery_worker:
+    command: sh -c "scripts/celery_worker_start.sh"
+    container_name: celery_worker
+    depends_on:
+      admin_pannel:
+        condition: service_healthy
+    hostname: celery_worker
+    image: admin_pannel_image
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+
+      RMQ_USER: ${RMQ_USER}
+      RMQ_PASS: ${RMQ_PASS}
+      RMQ_HOST: rabbitmq
+      RMQ_PORT: ${RMQ_PORT}
+    networks:
+      - main
+    restart: on-failure
+
+  celery_beat:
+    command: sh -c "scripts/celery_worker_start.sh"
+    container_name: celery_beat
+    depends_on:
+      admin_pannel:
+        condition: service_healthy
+    hostname: celery_beat
+    image: admin_pannel_image
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG}
+
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+
+      RMQ_USER: ${RMQ_USER}
+      RMQ_PASS: ${RMQ_PASS}
+      RMQ_HOST: rabbitmq
+      RMQ_PORT: ${RMQ_PORT}
+    networks:
+      - main
+    restart: on-failure
 
 volumes:
   db_vol: { }
+
+networks:
+  main: { }

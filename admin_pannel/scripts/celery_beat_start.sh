@@ -1,0 +1,1 @@
+celery -A admin_pannel beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
