@@ -4,9 +4,6 @@ from .base import *
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('SQL_ENGINE', 'django.db.backends.postgresql_psycopg2'),
-        'OPTIONS': {
-            'options': '-c search_path=content'
-        },
         'NAME': os.environ.get('POSTGRES_DATABASE', 'movies'),
         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),

@@ -1,3 +1,4 @@
+import os
 from uuid import uuid4
 
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -36,6 +37,7 @@ class Movie(TimeStampedModel):
         constraints = [
             models.UniqueConstraint(fields=['title', 'creation_date'], name='movie_unique')
         ]
+        db_table = f'"{os.getenv("MOVIES_SCHEMA", "content")}"."movies_movie"'
 
     def __str__(self):
         return self.title
@@ -55,6 +57,7 @@ class Genre(TimeStampedModel):
     class Meta:
         verbose_name = _('жанр')
         verbose_name_plural = _('жанры')
+        db_table = f'"{os.getenv("MOVIES_SCHEMA", "content")}"."movies_genre"'
 
     def __str__(self):
         return self.name
@@ -79,6 +82,7 @@ class Person(TimeStampedModel):
         constraints = [
             models.UniqueConstraint(fields=['firstname', 'lastname', 'birthdate', 'birthplace'], name='person_unique')
         ]
+        db_table = f'"{os.getenv("MOVIES_SCHEMA", "content")}"."movies_person"'
 
     def __str__(self):
         return f'{self.firstname} {self.lastname}'
@@ -109,6 +113,7 @@ class MoviePerson(TimeStampedModel):
         constraints = [
             models.UniqueConstraint(fields=['movie', 'person', 'role'], name='movie_person_unique')
         ]
+        db_table = f'"{os.getenv("MOVIES_SCHEMA", "content")}"."movies_movieperson"'
 
     def __str__(self):
         return f'{self.movie} - {self.person} - {self.get_role_display()}'
