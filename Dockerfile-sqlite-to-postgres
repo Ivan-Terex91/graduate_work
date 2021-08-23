@@ -1,0 +1,15 @@
+FROM python:3.9-alpine
+
+WORKDIR /sqlite_to_postgres
+
+RUN apk update \
+    && apk add postgresql-dev gcc python3-dev musl-dev
+
+
+RUN pip install --upgrade pip
+COPY ./requirements /sqlite_to_postgres/requirements
+RUN pip install -r /sqlite_to_postgres/requirements/sqlite-to-postgres.txt --no-cache-dir
+
+COPY ./sqlite_to_postgres /sqlite_to_postgres
+
+CMD sleep 10 && python main.py

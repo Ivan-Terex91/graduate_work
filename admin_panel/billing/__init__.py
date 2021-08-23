@@ -1,1 +1,1 @@
-default_app_config = 'billing.apps.BillingConfig'
+default_app_config = "billing.apps.BillingConfig"
