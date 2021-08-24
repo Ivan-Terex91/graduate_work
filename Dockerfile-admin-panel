@@ -1,0 +1,15 @@
+FROM python:3.9-alpine
+
+WORKDIR /admin_panel
+
+RUN apk update \
+    && apk add postgresql-dev gcc python3-dev musl-dev
+
+
+RUN pip install --upgrade pip
+COPY ./requirements /admin_panel/requirements
+RUN pip install -r /admin_panel/requirements/admin-panel.txt --no-cache-dir
+
+COPY ./admin_panel /admin_panel
+
+CMD python manage.py makemigrations && python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000
