@@ -19,8 +19,8 @@ class PostgresSaver:
         """Загрузка фильма."""
 
         movie = Movie(
-            title=single_movie.get("title", "title"),
-            description=single_movie.get("description", "description"),
+            title=single_movie.get("title"),  # type: ignore
+            description=single_movie.get("description"),  # type: ignore
             imdb_rating=single_movie.get("imdb_rating") or randrange(0, 10),
             creation_date=random_date(),
         )
@@ -99,7 +99,7 @@ class PostgresSaver:
     def load_person_and_movie_person(self, single_movie: dict, movie_id):
         """Загрузка людей и заполнение таблицы movie_person."""
 
-        person_list = single_movie.get("persons", [])
+        person_list = single_movie.get("persons")
         for person in person_list:
             _person = Person(firstname=person[0], role=person[1])
             if not _person.firstname:
@@ -134,7 +134,7 @@ class PostgresSaver:
             person_id = self.cursor.fetchone()[0]
 
             movie_person = MoviePerson(
-                movie_id=movie_id, person_id=person_id, role=_person.role   # type: ignore
+                movie_id=movie_id, person_id=person_id, role=_person.role
             )
             data = (
                 movie_person.id,
@@ -143,7 +143,7 @@ class PostgresSaver:
                 movie_person.role,
                 movie_person.created,
                 movie_person.modified,
-            )  # type: ignore
+            )
             self.cursor.execute(
                 f"""
                                INSERT INTO content.movies_movieperson(id, movie_id, person_id, role, created, modified)
