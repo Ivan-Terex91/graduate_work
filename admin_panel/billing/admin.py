@@ -1,7 +1,12 @@
 from django.contrib import admin
 
-from .models import (Order, PaymentMethod, Subscription, SubscriptionMovie,
-                     UsersSubscription)
+from .models import (
+    Order,
+    PaymentMethod,
+    Subscription,
+    SubscriptionMovie,
+    UsersSubscription,
+)
 
 
 class SubscriptionMovieInLine(admin.TabularInline):
