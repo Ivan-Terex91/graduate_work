@@ -100,7 +100,7 @@ class PostgresSaver:
         """Загрузка людей и заполнение таблицы movie_person."""
 
         person_list = single_movie.get("persons")
-        for person in person_list:
+        for person in person_list:  # type: ignore
             _person = Person(firstname=person[0], role=person[1])
             if not _person.firstname:
                 continue
@@ -134,7 +134,7 @@ class PostgresSaver:
             person_id = self.cursor.fetchone()[0]
 
             movie_person = MoviePerson(
-                movie_id=movie_id, person_id=person_id, role=_person.role
+                movie_id=movie_id, person_id=person_id, role=_person.role  # type: ignore
             )
             data = (
                 movie_person.id,
@@ -143,7 +143,7 @@ class PostgresSaver:
                 movie_person.role,
                 movie_person.created,
                 movie_person.modified,
-            )
+            )  # type: ignore
             self.cursor.execute(
                 f"""
                                INSERT INTO content.movies_movieperson(id, movie_id, person_id, role, created, modified)
