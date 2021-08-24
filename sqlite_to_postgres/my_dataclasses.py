@@ -34,8 +34,8 @@ class Movie:
     imdb_rating: float = field(default=0.0)
     rating: float = field(default=0.0)
     age_limit: int = field(default=0)
-    created: str = field(default=datetime.now())
-    modified: str = field(default=datetime.now())
+    created: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    modified: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
@@ -45,8 +45,8 @@ class Genre:
 
     name: str
     description: str = field(default="description")
-    created: str = field(default=datetime.now())
-    modified: str = field(default=datetime.now())
+    created: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    modified: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
@@ -59,8 +59,8 @@ class Person:
     lastname: str = field(default="")
     birthdate: str = field(default=random_date())
     birthplace: str = field(default="Saint-Petersburg")
-    created: str = field(default=datetime.now())
-    modified: str = field(default=datetime.now())
+    created: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    modified: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
 
@@ -79,6 +79,6 @@ class MoviePerson:
     role: RoleType
     movie_id: uuid.UUID = field(default_factory=uuid.uuid4)
     person_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    created: str = field(default=datetime.now())
-    modified: str = field(default=datetime.now())
+    created: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    modified: str = field(default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
