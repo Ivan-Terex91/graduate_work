@@ -1,7 +1,8 @@
 from random import randrange
 
 import psycopg2.extras
-from my_dataclasses import Genre, Movie, MovieGenre, MoviePerson, Person, random_date
+from my_dataclasses import (Genre, Movie, MovieGenre, MoviePerson, Person,
+                            random_date)
 
 psycopg2.extras.register_uuid()
 
