@@ -16,6 +16,7 @@ class SubscriptionPeriod(models.IntegerChoices):
 
 class SubscriptionType(models.TextChoices):
     """Тип подписки"""
+
     BRONZE = "bronze", _("Бронза")
     SILVER = "silver", _("Серебро")
     GOLD = "gold", _("Золото")
@@ -44,8 +45,13 @@ class Subscription(TimeStampedModel):
         null=False,
         blank=False,
     )
-    type = models.CharField(verbose_name=_("тип подписки"), max_length=10, choices=SubscriptionType.choices, null=False,
-                            blank=False)
+    type = models.CharField(
+        verbose_name=_("тип подписки"),
+        max_length=10,
+        choices=SubscriptionType.choices,
+        null=False,
+        blank=False,
+    )
     price = models.DecimalField(
         verbose_name=_("цена"), max_digits=10, decimal_places=2, null=False, blank=False
     )
@@ -103,6 +109,7 @@ class SubscriptionState(models.TextChoices):
 
 class UsersSubscription(TimeStampedModel):
     """Подписки клиентов"""
+
     id = models.UUIDField(
         verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
     )
@@ -112,8 +119,13 @@ class UsersSubscription(TimeStampedModel):
     subscription = models.ForeignKey(
         verbose_name=_("подписка"), to="Subscription", on_delete=models.CASCADE
     )
-    status = models.CharField(verbose_name=_("статус"), max_length=20, choices=SubscriptionState.choices, null=False,
-                              blank=False)
+    status = models.CharField(
+        verbose_name=_("статус"),
+        max_length=20,
+        choices=SubscriptionState.choices,
+        null=False,
+        blank=False,
+    )
 
     class Meta:
         verbose_name = _("подписка клиента")
@@ -126,6 +138,7 @@ class UsersSubscription(TimeStampedModel):
 
 class PaymentSystem(models.TextChoices):
     """Платёжные системы"""
+
     STRIPE = "stripe"
     YOOMONEY = "yoomoney"
     CLOUDPAYMENTS = "cloudpayments"
@@ -133,11 +146,18 @@ class PaymentSystem(models.TextChoices):
 
 class PaymentMethod(TimeStampedModel):
     """Способы оплаты"""
+
     id = models.UUIDField(
         verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
     )
-    payment_system = models.CharField(verbose_name=_("платёжная система"), max_length=20, choices=PaymentSystem.choices,
-                                      default=PaymentSystem.STRIPE, null=False, blank=False)
+    payment_system = models.CharField(
+        verbose_name=_("платёжная система"),
+        max_length=20,
+        choices=PaymentSystem.choices,
+        default=PaymentSystem.STRIPE,
+        null=False,
+        blank=False,
+    )
     type = models.CharField(verbose_name=_("тип"), max_length=50)
 
     def __str__(self):
@@ -184,7 +204,8 @@ class Order(TimeStampedModel):
         verbose_name=_("способ оплаты"),
         to="PaymentMethod",
         on_delete=models.RESTRICT,
-        null=False, blank=False
+        null=False,
+        blank=False,
     )
     currency = models.CharField(
         verbose_name=_("валюта"),
@@ -195,7 +216,11 @@ class Order(TimeStampedModel):
     )
     discount = models.PositiveSmallIntegerField(verbose_name=_("скидка (%)"), default=0)
     total_cost = models.DecimalField(
-        verbose_name=_("итоговая стоимость"), max_digits=10, decimal_places=2, null=False, blank=False
+        verbose_name=_("итоговая стоимость"),
+        max_digits=10,
+        decimal_places=2,
+        null=False,
+        blank=False,
     )
 
     class Meta:

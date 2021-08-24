@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Order, Subscription, SubscriptionMovie, UsersSubscription, PaymentMethod
+from .models import (Order, PaymentMethod, Subscription, SubscriptionMovie,
+                     UsersSubscription)
 
 
 class SubscriptionMovieInLine(admin.TabularInline):
@@ -33,6 +34,7 @@ class UsersSubscriptionAdmin(admin.ModelAdmin):
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
     """Способы оплаты"""
+
     list_display = ("id", "payment_system", "type")
     list_filter = ("payment_system", "type")
 
