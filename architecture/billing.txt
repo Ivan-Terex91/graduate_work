@@ -1,0 +1,27 @@
+@startuml
+
+component "Billing Service" {
+component "Payment System" as payment
+component "Billing API" as API
+component "Scheduler" as Scheduler
+component "Admin Service" as AdminService
+database "Billing DB" as db
+actor Client #line:black
+actor Admin
+}
+
+component "Auth Service" as auth #White
+component "Notification Service" as notification #White
+
+'billing
+Admin -up-> AdminService: формирование\lподписок,\l спец. предложений
+AdminService <-left-> db: сохранение и контроль
+db <-down-> API: CRUD\nоперации
+db <-left-> Scheduler : мониторинг\lподписок\lи заказов
+Scheduler <-down-> payment: мониторинг\lплатежей
+auth <-down- [Billing Service] : изменение\lролей\lпользователя
+notification <-down- [Billing Service] : отправка\lсобытий
+Client -left-> API: оформление/отказ подписки,\nпокупка фильма
+payment <-up-> API: операции\lпо оплате
+
+@enduml
