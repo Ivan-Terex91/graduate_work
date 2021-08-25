@@ -119,6 +119,14 @@ class UsersSubscription(TimeStampedModel):
     subscription = models.ForeignKey(
         verbose_name=_("подписка"), to="Subscription", on_delete=models.CASCADE
     )
+
+    start_date = models.DateField(
+        verbose_name=_("дата начала"), null=False, blank=False
+    )
+    end_date = models.DateField(
+        verbose_name=_("дата окончания"), null=False, blank=False
+    )
+
     status = models.CharField(
         verbose_name=_("статус"),
         max_length=20,
