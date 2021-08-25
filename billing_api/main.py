@@ -1,11 +1,11 @@
 import logging
 
 import uvicorn as uvicorn
-from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
+from api.v1 import billing
 from core import auth, config
 from core.logger import LOGGING
-from api.v1 import billing
+from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
 
 app = FastAPI(
     title=config.PROJECT_NAME,

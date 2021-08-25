@@ -75,15 +75,7 @@ services:
       - db
       - redis
 
-#
-#  auth-db:
-#    image: postgres:13-alpine
-#    env_file:
-#      ./.env
-#    volumes:
-#      - auth_postgres_data:/var/lib/postgresql/data
-#      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-#
+
   redis:
     image: redis
     volumes:
