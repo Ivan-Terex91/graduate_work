@@ -3,7 +3,7 @@ import logging
 import uvicorn as uvicorn
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
-from core import config
+from core import auth, config
 from core.logger import LOGGING
 from api.v1 import billing
 
@@ -18,7 +18,7 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-    pass
+    auth.auth_client = auth.AuthClient(base_url=config.AUTH_URL)
 
 
 @app.on_event("shutdown")
