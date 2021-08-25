@@ -34,6 +34,20 @@ services:
       - db
       - admin-panel
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile-billing-api
+    volumes:
+      - ./billing_api:/billing_api
+    env_file:
+      - ./.env
+    ports:
+      - "8008:8008"
+    depends_on:
+      - db
+      - admin-panel
+
 
   nginx:
     image: nginx:alpine
