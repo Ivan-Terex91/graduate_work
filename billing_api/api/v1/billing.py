@@ -5,14 +5,18 @@ from models.db_models import Order, UsersSubscription
 
 from .models.api_models import OrderApiModel, UserSubscriptionApiModel
 
-# from billing_api.models.models import UsersSubscription
-
 router = APIRouter()
 
 
-@router.post("/create_subscription")
-async def create_subscription(auth_user=Depends(auth_current_user)):
-    """Метод оформления подписки"""
+@router.post("/create_single_subscription")
+async def create_single_subscription(auth_user=Depends(auth_current_user)):
+    """Метод оформления одноразовой подписки"""
+    pass
+
+
+@router.post("/create_automatic_subscription")
+async def create_automatic_subscription(auth_user=Depends(auth_current_user)):
+    """Метод оформления подписки с автомотической пролонгацией"""
     pass
 
 

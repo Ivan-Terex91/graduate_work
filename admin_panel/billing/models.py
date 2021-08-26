@@ -9,9 +9,10 @@ from model_utils.models import TimeStampedModel
 class SubscriptionPeriod(models.IntegerChoices):
     """Периоды подписки"""
 
-    THIRTY_DAYS = 30, _("30")
-    NINETY_DAYS = 90, _("90")
-    ONE_HUNDRED_AND_EIGHTY_DAYS = 180, _("180")
+    WEEK = 7, _("7")
+    MONTH = 30, _("30")
+    SIX_MONTH = 180, _("180")
+    YEAR = 365, _("365")
 
 
 class SubscriptionType(models.TextChoices):
@@ -63,12 +64,14 @@ class Subscription(TimeStampedModel):
         blank=False,
     )
 
+    automatic = models.BooleanField(verbose_name=_("автоматическая"), default=False, null=False, blank=False)
+
     class Meta:
         verbose_name = _("подписка")
         verbose_name_plural = _("подписки")
         constraints = [
             models.UniqueConstraint(
-                fields=["title", "period", "type"], name="subscription_unique"
+                fields=["title", "period", "type", "automatic"], name="subscription_unique"
             )
         ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_subscription"'

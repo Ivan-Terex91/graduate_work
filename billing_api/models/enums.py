@@ -4,9 +4,10 @@ from enum import Enum, IntEnum
 class SubscriptionPeriod(IntEnum):
     """Периоды подписки"""
 
-    THIRTY_DAYS = 30
-    NINETY_DAYS = 90
-    ONE_HUNDRED_AND_EIGHTY_DAYS = 180
+    WEEK = 7
+    MONTH = 30
+    SIX_MONTH = 180
+    YEAR = 365
 
 
 class SubscriptionType(Enum):
