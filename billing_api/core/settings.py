@@ -3,6 +3,7 @@ from pydantic import BaseSettings, Field
 
 class DatabaseSettings(BaseSettings):
     """Настройки для postgres"""
+
     host: str = Field("localhost", env="POSTGRES_HOST")
     port: int = Field(5432, env="POSTGRES_PORT")
     user: str = Field("postgres", env="POSTGRES_USER")

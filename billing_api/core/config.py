@@ -14,7 +14,7 @@ TORTOISE_CONFIG = {
     },
     "apps": {
         "billing": {
-            "models": ["models.models"],
+            "models": ["models.db_models"],
         }
     },
     "use_tz": True,

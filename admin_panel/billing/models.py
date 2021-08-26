@@ -140,7 +140,7 @@ class UsersSubscription(TimeStampedModel):
         verbose_name_plural = _("Подписки клиентов")
         constraints = [
             models.UniqueConstraint(
-                fields=["title", "period", "type"], name="subscription_unique"
+                fields=["user_id", "subscription", "start_date", "end_date"], name="user_subscription_unique"
             )
         ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_userssubscription"'

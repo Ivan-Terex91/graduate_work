@@ -1,7 +1,10 @@
-from core.auth import auth_current_user
 from fastapi import APIRouter, Depends
 
-from models.models import UsersSubscription, Order
+from core.auth import auth_current_user
+from models.db_models import Order, UsersSubscription
+
+from .models.api_models import OrderApiModel, UserSubscriptionApiModel
+
 # from billing_api.models.models import UsersSubscription
 
 router = APIRouter()
@@ -19,20 +22,29 @@ async def cancel_subscription(auth_user=Depends(auth_current_user)):
     pass
 
 
-@router.get("/subscriptions")
+@router.get("/subscriptions", response_model=list[UserSubscriptionApiModel])
 async def user_subscriptions(auth_user=Depends(auth_current_user)):
     """Метод просмотра подписок пользователя"""
-    # subscriptions = await UsersSubscription.get(user_id=auth_user)
-    subscriptions = await UsersSubscription.filter(user_id=auth_user)
-    print(subscriptions)
-    print(type(subscriptions))
-    return [sub.__dict__ for sub in subscriptions]
+    subscriptions = await UsersSubscription.filter(user_id=auth_user).select_related(
+        "subscription"
+    )
+    return [
+        UserSubscriptionApiModel(subscription=sub.subscription.__dict__, **sub.__dict__)
+        for sub in subscriptions
+    ]
 
 
-@router.get("/orders")
+@router.get("/orders", response_model=list[OrderApiModel])
 async def user_orders(auth_user=Depends(auth_current_user)):
     """Метод просмотра заказов пользователя"""
-    orders = await Order.filter(user_id=auth_user)
-    print(orders)
-    print(type(orders))
-    return [order.__dict__ for order in orders]
+    orders = await Order.filter(user_id=auth_user).prefetch_related(
+        "subscription", "payment_method"
+    )
+    return [
+        OrderApiModel(
+            subscription=order.subscription.__dict__,
+            payment_method=order.payment_method.__dict__,
+            **order.__dict__
+        )
+        for order in orders
+    ]
