@@ -102,9 +102,9 @@ class SubscriptionMovie(TimeStampedModel):
 class SubscriptionState(models.TextChoices):
     """Модель статусов подписок"""
 
-    paid = "paid", _("Оплачена")
-    active = "active", _("Активна")
-    inactive = "inactive", _("Неактивна")
+    PAID = "paid", _("Оплачена")
+    ACTIVE = "active", _("Активна")
+    INACTIVE = "inactive", _("Неактивна")
 
 
 class UsersSubscription(TimeStampedModel):
@@ -117,7 +117,7 @@ class UsersSubscription(TimeStampedModel):
         verbose_name=_("идентификатор клиента"), null=False, blank=False
     )
     subscription = models.ForeignKey(
-        verbose_name=_("подписка"), to="Subscription", on_delete=models.CASCADE
+        verbose_name=_("подписка"), to="Subscription", on_delete=models.RESTRICT
     )
 
     start_date = models.DateField(
@@ -138,10 +138,15 @@ class UsersSubscription(TimeStampedModel):
     class Meta:
         verbose_name = _("подписка клиента")
         verbose_name_plural = _("Подписки клиентов")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["title", "period", "type"], name="subscription_unique"
+            )
+        ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_userssubscription"'
 
     def __str__(self):
-        return f"{self.user_id} - {self.subscription} - {self.status}"
+        return f"{self.user_id} - {self.subscription} - {self.start_date}:{self.end_date}"
 
 
 class PaymentSystem(models.TextChoices):
@@ -166,7 +171,7 @@ class PaymentMethod(TimeStampedModel):
         null=False,
         blank=False,
     )
-    type = models.CharField(verbose_name=_("тип"), max_length=50)
+    type = models.CharField(verbose_name=_("тип"), max_length=50, null=False, blank=False)
 
     def __str__(self):
         return f"{self.payment_system} - {self.type}"
@@ -205,6 +210,7 @@ class Order(TimeStampedModel):
         verbose_name=_("статус заказа"),
         max_length=20,
         choices=OrderStatus.choices,
+        default=OrderStatus.CREATED,
         null=False,
         blank=False,
     )
@@ -222,7 +228,8 @@ class Order(TimeStampedModel):
         null=False,
         blank=False,
     )
-    discount = models.PositiveSmallIntegerField(verbose_name=_("скидка (%)"), default=0)
+    discount = models.PositiveSmallIntegerField(verbose_name=_("скидка (%)"), default=0, null=False,
+                                                blank=False)
     total_cost = models.DecimalField(
         verbose_name=_("итоговая стоимость"),
         max_digits=10,

@@ -6,6 +6,7 @@ from core import auth, config
 from core.logger import LOGGING
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+from tortoise import Tortoise
 
 app = FastAPI(
     title=config.PROJECT_NAME,
@@ -19,11 +20,13 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup():
     auth.auth_client = auth.AuthClient(base_url=config.AUTH_URL)
+    await Tortoise.init(config=config.TORTOISE_CONFIG)
+    await Tortoise.generate_schemas(safe=True)
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    pass
+    await Tortoise.close_connections()
 
 
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["billing"])

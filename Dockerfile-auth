@@ -9,4 +9,5 @@ RUN pip install -r /auth/requirements/auth.txt --no-cache-dir
 
 COPY ./auth /auth
 
-CMD ["gunicorn", "main:app", "-b", "0.0.0.0:8001", "--reload"]
+# CMD ["gunicorn", "main:app", "-b", "0.0.0.0:8001", "--reload"]
+CMD sleep 20 && gunicorn main:app -b 0.0.0.0:8001 --reload
