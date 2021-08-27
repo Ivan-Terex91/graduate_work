@@ -33,6 +33,7 @@ services:
     depends_on:
       - db
       - admin-panel
+    restart: on-failure
 
   api:
     build:

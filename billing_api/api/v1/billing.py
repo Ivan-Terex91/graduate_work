@@ -14,6 +14,12 @@ async def create_single_subscription(auth_user=Depends(auth_current_user)):
     pass
 
 
+@router.post("/refund_for_subscription")
+async def refund_for_subscription(auth_user=Depends(auth_current_user)):
+    """Метод возврата денег за подписку"""
+    pass
+
+
 @router.post("/create_automatic_subscription")
 async def create_automatic_subscription(auth_user=Depends(auth_current_user)):
     """Метод оформления подписки с автомотической пролонгацией"""
@@ -21,7 +27,7 @@ async def create_automatic_subscription(auth_user=Depends(auth_current_user)):
 
 
 @router.post("/cancel_subscription")
-async def cancel_subscription(auth_user=Depends(auth_current_user)):
+async def cancel_automatic_subscription(auth_user=Depends(auth_current_user)):
     """Метод отказа от подписки"""
     pass
 

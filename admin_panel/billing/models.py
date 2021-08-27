@@ -240,6 +240,7 @@ class Order(TimeStampedModel):
         null=False,
         blank=False,
     )
+    refund = models.BooleanField(verbose_name=_("возврат"), default=False)
 
     class Meta:
         verbose_name = _("заказ")

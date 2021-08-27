@@ -25,6 +25,7 @@ class Subscription(AbstractModel):
     type: SubscriptionType = fields.CharEnumField(enum_type=SubscriptionType)
     price = fields.DecimalField(max_digits=10, decimal_places=2, null=False)
     currency: Currency = fields.CharEnumField(enum_type=Currency)
+    automatic = fields.BooleanField(default=False)
 
     class Meta:
         table = "billing_subscription"
@@ -84,6 +85,7 @@ class Order(AbstractModel):
     currency: Currency = fields.CharEnumField(enum_type=Currency)
     discount = fields.SmallIntField(default=0, null=False)
     total_cost = fields.DecimalField(max_digits=10, decimal_places=2, null=False)
+    refund = fields.BooleanField(default=False)
 
     class Meta:
         table = "billing_order"

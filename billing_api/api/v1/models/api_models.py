@@ -16,6 +16,7 @@ class SubscriptionApiModel(BaseModel):
     type: SubscriptionType
     price: float
     currency: Currency
+    automatic: bool
 
 
 class UserSubscriptionApiModel(BaseModel):
@@ -46,3 +47,4 @@ class OrderApiModel(BaseModel):
     currency: Currency
     discount: int
     total_cost: float
+    refund: bool
