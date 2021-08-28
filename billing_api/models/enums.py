@@ -28,6 +28,7 @@ class Currency(Enum):
 class SubscriptionState(Enum):
     """Статусы подписок"""
 
+    CANCELED = "canceled"
     PAID = "paid"
     ACTIVE = "active"
     INACTIVE = "inactive"

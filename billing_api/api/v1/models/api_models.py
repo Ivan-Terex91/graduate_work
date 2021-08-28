@@ -29,11 +29,11 @@ class UserSubscriptionApiModel(BaseModel):
     status: SubscriptionState
 
 
-class PaymentMethodApiModel(BaseModel):
-    """Способы оплаты"""
-
-    payment_system: PaymentSystem
-    type = str
+# class PaymentMethodApiModel(BaseModel):
+#     """Способы оплаты"""
+#
+#     payment_system: PaymentSystem
+#     type = str
 
 
 class OrderApiModel(BaseModel):
@@ -43,7 +43,7 @@ class OrderApiModel(BaseModel):
     user_email: str
     subscription: SubscriptionApiModel
     status: OrderStatus
-    payment_method: PaymentMethodApiModel
+    payment_method: PaymentSystem
     currency: Currency
     discount: int
     total_cost: float

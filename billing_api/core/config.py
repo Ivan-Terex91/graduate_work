@@ -20,3 +20,6 @@ TORTOISE_CONFIG = {
     "use_tz": True,
     "timezone": "Europe/Moscow",
 }
+
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY", "STRIPE_API_KEY")
+STRIPE_BASE_URL = os.getenv("STRIPE_BASE_URL", "https://api.stripe.com/v1")
