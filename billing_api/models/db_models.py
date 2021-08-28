@@ -1,8 +1,14 @@
 from tortoise import fields
 from tortoise.models import Model
 
-from .enums import (Currency, OrderStatus, PaymentSystem, SubscriptionPeriod,
-                    SubscriptionState, SubscriptionType)
+from .enums import (
+    Currency,
+    OrderStatus,
+    PaymentSystem,
+    SubscriptionPeriod,
+    SubscriptionState,
+    SubscriptionType,
+)
 
 
 class AbstractModel(Model):
@@ -43,7 +49,9 @@ class UsersSubscription(AbstractModel):
     )
     start_date = fields.DateField(null=False)
     end_date = fields.DateField(null=False)
-    status: SubscriptionState = fields.CharEnumField(enum_type=SubscriptionState, default=SubscriptionState.INACTIVE)
+    status: SubscriptionState = fields.CharEnumField(
+        enum_type=SubscriptionState, default=SubscriptionState.INACTIVE
+    )
 
     class Meta:
         table = "billing_userssubscription"
@@ -83,7 +91,9 @@ class Order(AbstractModel):
     #     "billing.PaymentMethod",
     #     on_delete=fields.RESTRICT,
     # )
-    payment_system: PaymentSystem = fields.CharEnumField(enum_type=PaymentSystem, default=PaymentSystem.STRIPE)
+    payment_system: PaymentSystem = fields.CharEnumField(
+        enum_type=PaymentSystem, default=PaymentSystem.STRIPE
+    )
     currency: Currency = fields.CharEnumField(enum_type=Currency)
     discount = fields.SmallIntField(default=0, null=False)
     total_cost = fields.DecimalField(max_digits=10, decimal_places=2, null=False)

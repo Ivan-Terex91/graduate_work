@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from tortoise import Tortoise
 
-from api.v1 import billing
+from api.v1 import billing, scheduler, user
 from core import auth, config
 from core.logger import LOGGING
 
@@ -31,6 +31,8 @@ async def shutdown():
 
 
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["billing"])
+app.include_router(scheduler.router, prefix="/api/v1/billing", tags=["scheduler-methods"])
+app.include_router(user.router, prefix="/api/v1/billing", tags=["user-info"])
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -2,9 +2,14 @@ import datetime
 
 from pydantic import UUID4, BaseModel
 
-from models.enums import (Currency, OrderStatus, PaymentSystem,
-                          SubscriptionPeriod, SubscriptionState,
-                          SubscriptionType)
+from models.enums import (
+    Currency,
+    OrderStatus,
+    PaymentSystem,
+    SubscriptionPeriod,
+    SubscriptionState,
+    SubscriptionType,
+)
 
 
 class SubscriptionApiModel(BaseModel):
@@ -39,11 +44,12 @@ class UserSubscriptionApiModel(BaseModel):
 class OrderApiModel(BaseModel):
     """Заказы"""
 
+    external_id: str
     user_id: UUID4
     user_email: str
     subscription: SubscriptionApiModel
     status: OrderStatus
-    payment_method: PaymentSystem
+    payment_system: PaymentSystem
     currency: Currency
     discount: int
     total_cost: float
