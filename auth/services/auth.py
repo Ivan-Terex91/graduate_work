@@ -34,6 +34,7 @@ class OAuthAccountNotFound(NotFound):
 class AccessToken:
     token: str
     user_id: UUID
+    user_email: str
     user_roles: list
     user_permissions: list
     country: str
@@ -51,6 +52,7 @@ class TokenService:
     def create_tokens(
         self,
         user_id: UUID,
+        user_email: str,
         user_roles: list,
         user_permissions: list,
         country: str,
@@ -63,6 +65,7 @@ class TokenService:
         now = datetime.now(tz=timezone.utc)
         payload = {
             "user_id": str(user_id),
+            "user_email": user_email,
             "user_roles": json.dumps(user_roles),
             "user_permissions": json.dumps(user_permissions),
             "country": country,
@@ -101,6 +104,7 @@ class TokenService:
         access_token = AccessToken(
             token=token,
             user_id=payload["user_id"],
+            user_email=payload["user_email"],
             user_roles=json.loads(payload["user_roles"]),
             user_permissions=json.loads(payload["user_permissions"]),
             country=payload["country"],
@@ -123,6 +127,7 @@ class TokenService:
         )
 
         user_id = refresh_token.user_id
+        user_email = access_token.user_email
         user_roles = access_token.user_roles
         user_permissions = access_token.user_permissions
         country = access_token.country
@@ -131,7 +136,7 @@ class TokenService:
         self._revoke_token(access_token)
 
         return self.create_tokens(
-            user_id, user_roles, user_permissions, country, birthdate
+            user_id, user_email, user_roles, user_permissions, country, birthdate
         )
 
     def remove_tokens(self, access_token: AccessToken):

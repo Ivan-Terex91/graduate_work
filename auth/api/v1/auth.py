@@ -64,6 +64,7 @@ class LoginView(Resource):
 
         access_token, refresh_token = self.services.token_service.create_tokens(
             user_id=user_id,
+            user_email=user.email,
             user_roles=user_roles_permissions["user_roles"],
             user_permissions=user_roles_permissions["user_permissions"],
             country=user.country,

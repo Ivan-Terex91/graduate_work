@@ -1,4 +1,6 @@
-from tortoise import fields
+from datetime import datetime
+
+from tortoise import fields, timezone
 from tortoise.models import Model
 
 from .enums import (
@@ -15,8 +17,8 @@ class AbstractModel(Model):
     """Абстрактная модель с общими полями"""
 
     id = fields.UUIDField(pk=True)
-    created = fields.DatetimeField()
-    modified = fields.DatetimeField()
+    created = fields.DatetimeField(default=timezone.now())
+    modified = fields.DatetimeField(default=timezone.now())
 
     class Meta:
         abstract = True
@@ -78,7 +80,7 @@ class UsersSubscription(AbstractModel):
 class Order(AbstractModel):
     """Заказы"""
 
-    external_id = fields.CharField(max_length=40, unique=True, null=False)
+    external_id = fields.CharField(max_length=40, unique=True, null=True)
     user_id = fields.UUIDField(null=False)
     user_email = fields.CharField(max_length=50, null=False)
     subscription: fields.ForeignKeyRelation[Subscription] = fields.ForeignKeyField(

@@ -14,6 +14,7 @@ class CheckToken(Resource):
         access_token = self.services.token_service.decode_access_token(token)
         return {
             "user_id": str(access_token.user_id),
+            "user_email": access_token.user_email,
             "user_roles": access_token.user_roles,
             "user_permissions": access_token.user_permissions,
             "country": access_token.country,

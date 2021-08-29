@@ -23,6 +23,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     search_fields = ("title", "period", "type")
     list_filter = ("period", "type")
     inlines = [SubscriptionMovieInLine]
+    readonly_fields = ("created", "modified")
 
 
 @admin.register(UsersSubscription)
@@ -31,7 +32,7 @@ class UsersSubscriptionAdmin(admin.ModelAdmin):
 
     list_display = ("id", "user_id", "subscription", "status")
     search_fields = ("user_id", "subscription", "status")
-
+    readonly_fields = ("created", "modified")
 #
 # @admin.register(PaymentMethod)
 # class PaymentMethodAdmin(admin.ModelAdmin):
@@ -48,3 +49,4 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ("id", "user_id", "subscription", "status", "total_cost", "currency")
     search_fields = ("user_id", "subscription")
     list_filter = ("status",)
+    readonly_fields = ("created", "modified")

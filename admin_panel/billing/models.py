@@ -202,8 +202,8 @@ class Order(TimeStampedModel):
     id = models.UUIDField(
         verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
     )
-    external_id = models.CharField(verbose_name=_("внешний идентификатор"), max_length=40, unique=True, null=False,
-                                   blank=False)
+    external_id = models.CharField(verbose_name=_("внешний идентификатор"), max_length=40, null=True,
+                                   blank=True)
     user_id = models.UUIDField(
         verbose_name=_("идентификатор клиента"), null=False, blank=False
     )

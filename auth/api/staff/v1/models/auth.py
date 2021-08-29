@@ -7,6 +7,7 @@ CheckTokenResponseModel = api.model(
     "CheckTokenResponseModel",
     {
         "user_id": fields.String(),
+        "user_email": fields.String(),
         "first_name": fields.String(),
         "last_name": fields.String(),
         "birthdate": fields.Date(),

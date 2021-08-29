@@ -1,6 +1,7 @@
 import datetime
+from typing import Optional
 
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4, BaseModel, Field
 
 from models.enums import (
     Currency,
@@ -44,7 +45,7 @@ class UserSubscriptionApiModel(BaseModel):
 class OrderApiModel(BaseModel):
     """Заказы"""
 
-    external_id: str
+    external_id: Optional[str] = None
     user_id: UUID4
     user_email: str
     subscription: SubscriptionApiModel
@@ -54,3 +55,18 @@ class OrderApiModel(BaseModel):
     discount: int
     total_cost: float
     refund: bool
+
+
+class PaymentDataIn(BaseModel):
+    """Входные данные для оплаты подписки"""
+    subscription_id: UUID4
+    payment_system: PaymentSystem
+    currency: Currency
+    discount: int = Field(ge=0, le=99)
+    total_coast: float
+    # TODO можно включить цену, валюту, но можно взять и через id это. Плюс открытый вопрос с payment method
+
+
+class RefundDataIn(BaseModel):
+    """Входные данные для возврата денег за подписку"""
+    subscription_id: UUID4

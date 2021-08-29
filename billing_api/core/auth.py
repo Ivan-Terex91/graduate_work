@@ -49,4 +49,5 @@ async def auth_current_user(
         raise credentials_exception
 
     data = response.json()
-    return UUID4(data["user_id"])
+    # return UUID4(data["user_id"])
+    return data
