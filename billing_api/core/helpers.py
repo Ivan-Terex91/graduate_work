@@ -11,3 +11,10 @@ def get_refund_amount(end_date: date, amount: Decimal, period: int) -> Optional[
 
     remaining_days = end_date - today
     return amount * remaining_days.days / period
+
+
+def get_amount(price: Decimal):
+    """Функция пересчёта цены в наименьший денежный эквивалент
+    (руб -> коп, usd -> cent)
+    """
+    return int(price * 100)

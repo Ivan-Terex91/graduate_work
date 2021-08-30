@@ -31,8 +31,8 @@ async def shutdown():
 
 
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["billing"])
-app.include_router(scheduler.router, prefix="/api/v1/billing", tags=["scheduler-methods"])
-app.include_router(user.router, prefix="/api/v1/billing", tags=["user-info"])
+app.include_router(scheduler.router, prefix="/api/v1/billing", tags=["scheduler"])
+app.include_router(user.router, prefix="/api/v1/billing", tags=["user"])
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -3,7 +3,7 @@ from datetime import datetime
 from tortoise import fields, timezone
 from tortoise.models import Model
 
-from .enums import (
+from .common_models import (
     Currency,
     OrderStatus,
     PaymentSystem,

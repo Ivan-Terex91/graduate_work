@@ -4,62 +4,61 @@ from core.auth import auth_current_user
 from core.stripe import get_stripe
 
 from models.db_models import Order, UsersSubscription, Subscription
-# from ...models.db_models import Subscription, Order, UsersSubscription,
-from pydantic import UUID4
 from starlette import status
 
-from .models.api_models import OrderApiModel, UserSubscriptionApiModel, PaymentDataIn, RefundDataIn
-from models.enums import SubscriptionState, OrderStatus
+from models.api_models import PaymentDataIn
+from models.common_models import SubscriptionState, OrderStatus
 
 from core.logger import logger
-
-from core.helpers import get_refund_amount
+from core.helpers import get_refund_amount, get_amount
+from db.repositories.order import OrderRepository
+from db.repositories.user_subscription import UserSubscriptionRepository
+from tortoise.transactions import in_transaction
 
 router = APIRouter()
 
 
-@router.post("/create_single_subscription")  # TODO может Order_sub...
-async def create_single_subscription(
-        payment_data: PaymentDataIn,
+@router.post("/subscription/payment/create")
+async def create_subscription_payment(
+        payment_data: PaymentDataIn,  # TODO может быть OrderDataIn
         auth_user=Depends(auth_current_user),
         stripe_client=Depends(get_stripe)):
-    """Метод оформления одноразовой подписки"""  # TODO только одноразовой ли ???!!!
-    user_subscription = await UsersSubscription.get_or_none(user_id=auth_user.get("user_id"),
-                                                            status__in=[SubscriptionState.PAID,
-                                                                        SubscriptionState.ACTIVE])
+    """Метод оформления (оплаты) подписки"""
+    user_subscription = await UserSubscriptionRepository.get_user_subscription(user_id=auth_user.get("user_id"),
+                                                                               status=[SubscriptionState.PAID,
+                                                                                       SubscriptionState.ACTIVE])
     if user_subscription:
         logger.debug(
             f"Error !!!!!!!, user {auth_user.get('user_id')} has active or paid subscription")  # TODO проверь логи
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has subscriptions")
 
-    user_order = await Order.get_or_none(user_id=auth_user.get("user_id"), status=OrderStatus.PROGRESS,
-                                         refund=False)  # TODO refund=False?
+    user_order = await OrderRepository.get_order(user_id=auth_user.get("user_id"), status=OrderStatus.PROGRESS)
     if user_order:
         logger.debug(f"Error !!!!!!!, user {auth_user.get('user_id')} has order in progress")
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has order in progress")
-    subscription = await Subscription.get_or_none(id=payment_data.subscription_id)
+    subscription = await Subscription.get_or_none(
+        id=payment_data.subscription_id)  # TODO надо ли создавать репу???!!!!!
 
-    # TODO далее наверное транзакция должна быть
-    order = await Order.create(
-        user_id=auth_user.get("user_id"),
-        user_email=auth_user.get("user_email"),
-        subscription=subscription,
-        currency=subscription.currency,
-        total_cost=subscription.price
-    )
-    print(order.__dict__)
-    customer = await stripe_client.create_customer(user_id=order.user_id, user_email=order.user_email)
-    print(customer)
+    # TODO далее наверное транзакция должна быть и логи логи логи!!!!
+    async with in_transaction():
+        order = await OrderRepository.create_order(user_id=auth_user.get("user_id"),
+                                                   user_email=auth_user.get("user_email"),
+                                                   subscription=subscription, payment_data=payment_data)
 
-    payment = await stripe_client.create_payment(customer_id=customer.get("id"), user_email=customer.get("email"),
-                                                 amount=int(subscription.price * 100),
-                                                 currency=subscription.currency.value)
-    print(payment)
-    await Order.filter(id=order.id).update(external_id=payment.get("id"), status=OrderStatus.PROGRESS)
+        customer = await stripe_client.create_customer(user_id=order.user_id, user_email=order.user_email)
+
+        payment = await stripe_client.create_payment(customer_id=customer.get("id"), user_email=customer.get("email"),
+                                                     amount=get_amount(subscription.price),
+                                                     currency=subscription.currency.value)
+
+        await OrderRepository.update_order_status(order_id=order.id, external_id=payment.get("id"),
+                                                  status=OrderStatus.PROGRESS)
+
+    # TODO тут поидее надо вернуть client.secret для формы ввода в stripe
 
 
-@router.post("/confirm_single_subscription")
-async def confirm_single_subscription(
+@router.post("/subscription/payment/confirm")
+async def confirm_subscription_payment(
         payment_id: str,
         auth_user=Depends(auth_current_user),
         stripe_client=Depends(get_stripe)):
@@ -68,68 +67,59 @@ async def confirm_single_subscription(
     confirm_payment = await stripe_client.confirm_payment(payment_id=payment_id)
 
 
-@router.post("/refund_for_subscription")
-async def refund_for_subscription(
+@router.post("/subscription/refund")
+async def refund_subscription(
         # refund_data: RefundDataIn,  # TODO теоритически подписка активная может быть только одна в нашем сервисе
         auth_user=Depends(auth_current_user),
         stripe_client=Depends(get_stripe)):
     """Метод возврата денег за подписку"""
-    user_subscription = await UsersSubscription.get_or_none(user_id=auth_user.get("user_id"),
-                                                            status=SubscriptionState.ACTIVE).select_related(
-        "subscription")  # TODO может уберу select
+    user_subscription = await UserSubscriptionRepository.get_user_subscription(user_id=auth_user.get("user_id"),
+                                                                               status=[SubscriptionState.ACTIVE])
     if not user_subscription:
         logger.debug(f"!!!!!!!, user {auth_user.get('user_id')} has no active subscription")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no active subscription")
-    print(user_subscription.__dict__)
-    user_order = await Order.get_or_none(user_id=auth_user.get("user_id"), status=OrderStatus.PAID,
-                                         refund=False).select_related(
-        "subscription")
+
+    user_order = await OrderRepository.get_order(user_id=auth_user.get("user_id"), status=OrderStatus.PAID)
     if not user_order:
         logger.debug(f"!!!!!!!, user {auth_user.get('user_id')} has no paid orders")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no paid orders")
-    print(user_order.__dict__)
+
     refund_amount = get_refund_amount(end_date=user_subscription.end_date, amount=user_order.total_cost,
                                       period=user_order.subscription.period.value)
-    print(refund_amount)
-    """Дальше, по моему, должна быть транзакция и следующий алгоритм
-    1. Создаём заказ на возврат
-    2. Создаём возврат в Stripe
-    3. Обновляем статус заказа на progress  # TODO может поменять название статуса на process ???!!!
-    4. Остальное шедуллер  
-    """
-    refund_order = await Order.create(
-        user_id=auth_user.get("user_id"),
-        user_email=auth_user.get("user_email"),
-        subscription=user_order.subscription,
-        currency=user_order.currency,
-        total_cost=refund_amount,
-        refund=True
-    )
-    print(refund_order.__dict__)
-    refund = await stripe_client.create_refund(payment_intent_id=user_order.external_id,
-                                               amount=int(refund_amount * 100))
-    print(refund)
-    await Order.filter(id=refund_order.id).update(external_id=refund.get("id"), status=OrderStatus.PROGRESS)
-    # TODO надо обновлять статус подписки на неактивную
+
+    # TODO далее наверное транзакция должна быть и логи логи логи!!!!
+    async with in_transaction():
+        refund_order = await OrderRepository.create_refund_order(order=user_order, total_cost=refund_amount)
+
+        refund = await stripe_client.create_refund(payment_intent_id=user_order.external_id,
+                                                   amount=get_amount(refund_amount))
+
+        await OrderRepository.update_order_status(order_id=refund_order.id, external_id=refund.get("id"),
+                                                  status=OrderStatus.PROGRESS)
+
+        await UserSubscriptionRepository.update_user_subscription_status(subscription_id=user_subscription.id,
+                                                                         status=SubscriptionState.INACTIVE)
+
+        # TODO затем это должен подхватить шедуллер и платёжка скажет что деньги вернулись или отправились то уведомить
 
 
-@router.post("/create_automatic_subscription")
-async def create_automatic_subscription(auth_user=Depends(auth_current_user), stripe_client=Depends(get_stripe)):
-    """Метод оформления подписки с автомотической пролонгацией"""
-    pass  # TODO этот метод не нужен тут наверное!!!!
+# @router.post("/create_automatic_subscription")
+# async def create_automatic_subscription(auth_user=Depends(auth_current_user), stripe_client=Depends(get_stripe)):
+#     """Метод оформления подписки с автомотической пролонгацией"""
+#     pass  # TODO этот метод не нужен тут наверное!!!!
 
 
-@router.post("/cancel_subscription")
-async def cancel_automatic_subscription(
+@router.post("/subscription/cancel")
+async def cancel_subscription(
         auth_user=Depends(auth_current_user),
 ):
     """Метод отказа от подписки"""
-    user_subscription = await UsersSubscription.get_or_none(user_id=auth_user.get("user_id"),
-                                                            status=SubscriptionState.ACTIVE).select_related(
-        "subscription")  # TODO может уберу select
-
+    # TODO логи логи логи
+    user_subscription = await UserSubscriptionRepository.get_user_subscription(user_id=auth_user.get("user_id"),
+                                                                               status=[SubscriptionState.ACTIVE])
     if not user_subscription:
         logger.debug(f"Error !!!!!!! , user {auth_user.get('user_id')} has no active subscription")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no active subscription")
 
-    await UsersSubscription.filter(id=user_subscription.id).update(status=SubscriptionState.CANCELED)
+    await UserSubscriptionRepository.update_user_subscription_status(subscription_id=user_subscription.id,
+                                                                     status=SubscriptionState.CANCELED)

@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from models.db_models import Order, UsersSubscription
-from pydantic import UUID4
 
-from .models.api_models import OrderApiModel, UserSubscriptionApiModel
+from models.api_models import OrderApiModel, UserSubscriptionApiModel
 from core.stripe import get_stripe
 
 router = APIRouter()

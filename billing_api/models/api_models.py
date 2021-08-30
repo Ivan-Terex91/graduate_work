@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import UUID4, BaseModel, Field
 
-from models.enums import (
+from models.common_models import (
     Currency,
     OrderStatus,
     PaymentSystem,
@@ -63,7 +63,7 @@ class PaymentDataIn(BaseModel):
     payment_system: PaymentSystem
     currency: Currency
     discount: int = Field(ge=0, le=99)
-    total_coast: float
+    total_cost: float
     # TODO можно включить цену, валюту, но можно взять и через id это. Плюс открытый вопрос с payment method
 
 
