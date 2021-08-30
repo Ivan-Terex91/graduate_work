@@ -22,7 +22,7 @@ services:
       - ./.env
     depends_on:
       - db
-    restart: always
+    restart: on-failure
 
   sqlite-to-postgres:
     build:

@@ -92,7 +92,7 @@ class Order(AbstractModel):
     # payment_method: fields.ForeignKeyRelation[PaymentMethod] = fields.ForeignKeyField(
     #     "billing.PaymentMethod",
     #     on_delete=fields.RESTRICT,
-    # )
+    # ) # TODO может просто отдельно payment_method должен быть!!!???
     payment_system: PaymentSystem = fields.CharEnumField(
         enum_type=PaymentSystem, default=PaymentSystem.STRIPE
     )

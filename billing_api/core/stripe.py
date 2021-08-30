@@ -1,6 +1,6 @@
 from typing import Optional
 
-import stripe
+import stripe  # TODO найминг
 from aiohttp import ClientSession
 
 # TODO повесить backoffы
@@ -93,11 +93,11 @@ class StripeClient:
             method="POST", endpoint="/payment_intents", data=payment_intent_data
         )
 
-    async def confirm_payment(self, payment_method: str, payment_id: str):
+    async def confirm_payment(self, payment_id: str, payment_method: str = None):
         """Подтверждение платёжа"""
         # TODO как я понял, это симуляция метода подтверждения от пользователя по client_secret
         # data = {"payment_method": "pm_card_visa"}  # TODO данные карты и т.д.
-        data = {"payment_method": payment_method}
+        data = {"payment_method": "pm_card_visa"}
         return await self._request(
             method="POST",
             endpoint=f"/payment_intents/{payment_id}/confirm",

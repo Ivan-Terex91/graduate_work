@@ -12,4 +12,4 @@ RUN pip install -r /sqlite_to_postgres/requirements/sqlite-to-postgres.txt --no-
 
 COPY ./sqlite_to_postgres /sqlite_to_postgres
 
-CMD sleep 20 && python main.py
+CMD sleep 10 && python main.py

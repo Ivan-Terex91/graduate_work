@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException
 
 from core.auth import auth_current_user
 from core.stripe import get_stripe
@@ -58,13 +58,18 @@ async def create_single_subscription(
 
 
 @router.post("/confirm_single_subscription")
-async def confirm_single_subscription():
-    pass
+async def confirm_single_subscription(
+        payment_id: str,
+        auth_user=Depends(auth_current_user),
+        stripe_client=Depends(get_stripe)):
+    """Метод подтверждения платёжа пользователем"""
+    # TODO пока это заглушка и данные о payment_method в stripe_client захардкожены
+    confirm_payment = await stripe_client.confirm_payment(payment_id=payment_id)
 
 
 @router.post("/refund_for_subscription")
 async def refund_for_subscription(
-        refund_data: RefundDataIn,
+        # refund_data: RefundDataIn,  # TODO теоритически подписка активная может быть только одна в нашем сервисе
         auth_user=Depends(auth_current_user),
         stripe_client=Depends(get_stripe)):
     """Метод возврата денег за подписку"""
@@ -75,24 +80,34 @@ async def refund_for_subscription(
         logger.debug(f"Error, user {auth_user.get('user_id')} has no active subscription")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no active subscription")
     print(user_subscription.__dict__)
-    user_order = await Order.get_or_none(user_id=auth_user.get("user_id"), status=OrderStatus.PAID, refund=False).select_related(
+    user_order = await Order.get_or_none(user_id=auth_user.get("user_id"), status=OrderStatus.PAID,
+                                         refund=False).select_related(
         "subscription")
     if not user_order:
         logger.debug(f"Error, user {auth_user.get('user_id')} has no paid orders")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no paid orders")
     print(user_order.__dict__)
     refund_amount = get_refund_amount(end_date=user_subscription.end_date, amount=user_order.total_cost,
-                                      period=user_order.subscription.period.value)  # TODO тут будет формула для возврата, и если сумма 0 то возврата нет
+                                      period=user_order.subscription.period.value)
     print(refund_amount)
     """Дальше, по моему, должна быть транзакция и следующий алгоритм
     1. Создаём заказ на возврат
     2. Создаём возврат в Stripe
-    3. Обновляем статус заказа на progress
+    3. Обновляем статус заказа на progress  # TODO может поменять название статуса на process ???!!!
     4. Остальное шедуллер  
-    """ # TODO может поменять название статуса на process ???!!!
-    order = await Order.create()
-
-    # refund = await stripe_client.create_refund(payment_intent_id: str, amount: int)
+    """
+    refund_order = await Order.create(
+        user_id=auth_user.get("user_id"),
+        user_email=auth_user.get("user_email"),
+        subscription=user_order.subscription,
+        currency=user_order.currency,
+        total_cost=refund_amount,
+        refund=True
+    )
+    print(refund_order.__dict__)
+    refund = await stripe_client.create_refund(payment_intent_id=user_order.external_id, amount=int(refund_amount * 100))
+    print(refund)
+    await Order.filter(id=refund_order.id).update(external_id=refund.get("id"), status=OrderStatus.PROGRESS)
 
 
 @router.post("/create_automatic_subscription")
