@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
 from models.db_models import Order, UsersSubscription
+from pydantic import UUID4
 
 from .models.api_models import OrderApiModel, UserSubscriptionApiModel
+from core.stripe import get_stripe
 
 router = APIRouter()
 
@@ -32,3 +35,16 @@ async def processing_orders():
         OrderApiModel(subscription=order.subscription.__dict__, **order.__dict__)
         for order in orders
     ]
+
+
+@router.get("/order_info/{order_external_id:str}")
+async def check_order_payment(
+        order_external_id: str,
+        stripe_client=Depends(get_stripe)):
+    """Метод проверки оплаты заказа"""  # TODO или метод проверки статуса заказа
+    print("В check")
+    payment = await stripe_client.get_payment_data(payment_intents_id=order_external_id)
+    if payment.get("status") == "succeeded":
+        print("Платёж прошёл")
+    elif payment.get("status") == "requires_confirmation":
+        print("Ожидается подтверждение")

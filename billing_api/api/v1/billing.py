@@ -28,13 +28,14 @@ async def create_single_subscription(
                                                             status__in=[SubscriptionState.PAID,
                                                                         SubscriptionState.ACTIVE])
     if user_subscription:
-        logger.debug(f"Error, user {auth_user.get('user_id')} has active or paid subscription")  # TODO проверь логи
+        logger.debug(
+            f"Error !!!!!!!, user {auth_user.get('user_id')} has active or paid subscription")  # TODO проверь логи
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has subscriptions")
 
     user_order = await Order.get_or_none(user_id=auth_user.get("user_id"), status=OrderStatus.PROGRESS,
                                          refund=False)  # TODO refund=False?
     if user_order:
-        logger.debug(f"Error, user {auth_user.get('user_id')} has order in progress")
+        logger.debug(f"Error !!!!!!!, user {auth_user.get('user_id')} has order in progress")
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has order in progress")
     subscription = await Subscription.get_or_none(id=payment_data.subscription_id)
 
@@ -77,14 +78,14 @@ async def refund_for_subscription(
                                                             status=SubscriptionState.ACTIVE).select_related(
         "subscription")  # TODO может уберу select
     if not user_subscription:
-        logger.debug(f"Error, user {auth_user.get('user_id')} has no active subscription")
+        logger.debug(f"!!!!!!!, user {auth_user.get('user_id')} has no active subscription")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no active subscription")
     print(user_subscription.__dict__)
     user_order = await Order.get_or_none(user_id=auth_user.get("user_id"), status=OrderStatus.PAID,
                                          refund=False).select_related(
         "subscription")
     if not user_order:
-        logger.debug(f"Error, user {auth_user.get('user_id')} has no paid orders")
+        logger.debug(f"!!!!!!!, user {auth_user.get('user_id')} has no paid orders")
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no paid orders")
     print(user_order.__dict__)
     refund_amount = get_refund_amount(end_date=user_subscription.end_date, amount=user_order.total_cost,
@@ -105,9 +106,11 @@ async def refund_for_subscription(
         refund=True
     )
     print(refund_order.__dict__)
-    refund = await stripe_client.create_refund(payment_intent_id=user_order.external_id, amount=int(refund_amount * 100))
+    refund = await stripe_client.create_refund(payment_intent_id=user_order.external_id,
+                                               amount=int(refund_amount * 100))
     print(refund)
     await Order.filter(id=refund_order.id).update(external_id=refund.get("id"), status=OrderStatus.PROGRESS)
+    # TODO надо обновлять статус подписки на неактивную
 
 
 @router.post("/create_automatic_subscription")
@@ -117,6 +120,16 @@ async def create_automatic_subscription(auth_user=Depends(auth_current_user), st
 
 
 @router.post("/cancel_subscription")
-async def cancel_automatic_subscription(auth_user=Depends(auth_current_user), stripe_client=Depends(get_stripe)):
+async def cancel_automatic_subscription(
+        auth_user=Depends(auth_current_user),
+):
     """Метод отказа от подписки"""
-    pass
+    user_subscription = await UsersSubscription.get_or_none(user_id=auth_user.get("user_id"),
+                                                            status=SubscriptionState.ACTIVE).select_related(
+        "subscription")  # TODO может уберу select
+
+    if not user_subscription:
+        logger.debug(f"Error !!!!!!! , user {auth_user.get('user_id')} has no active subscription")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no active subscription")
+
+    await UsersSubscription.filter(id=user_subscription.id).update(status=SubscriptionState.CANCELED)
