@@ -1,13 +1,17 @@
+import logging
 from typing import Optional
 
+import backoff
 import stripe  # TODO найминг
 from aiohttp import ClientSession
-# TODO повесить backoffы
+from aiohttp.client_exceptions import ClientError
 from pydantic import UUID4
 
 from models.common_models import CustomerInner, PaymentInner, RefundInner
 
 from .config import STRIPE_API_KEY, STRIPE_BASE_URL
+
+logger = logging.getLogger(__name__)
 
 
 class StripeClient:
@@ -21,15 +25,21 @@ class StripeClient:
             "Authorization": f"Bearer {self.api_key}",
         }
 
+    @backoff.on_exception(
+        exception=ClientError,
+        wait_gen=backoff.expo,
+        max_time=30,
+        logger=logger
+    )
     async def _request(
-        self, method: str, endpoint: str, headers: dict = None, data: dict = None
+            self, method: str, endpoint: str, headers: dict = None, data: dict = None
     ):
         async with ClientSession(headers=self.auth_header) as session:
             async with session.request(
-                method=method,
-                url=f"{self.base_url}{endpoint}",
-                headers=headers,
-                data=data,
+                    method=method,
+                    url=f"{self.base_url}{endpoint}",
+                    headers=headers,
+                    data=data,
             ) as resp:
                 response = await resp.json()
                 return response
@@ -51,12 +61,12 @@ class StripeClient:
         return CustomerInner(**response)
 
     async def create_payment(
-        self,
-        customer_id: str,
-        amount: float,
-        currency: str,
-        user_email: str,
-        # payment_method,
+            self,
+            customer_id: str,
+            amount: float,
+            currency: str,
+            user_email: str,
+            # payment_method,
     ):
         """Создание платежа"""
         # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
@@ -74,12 +84,12 @@ class StripeClient:
         return PaymentInner(**payment)
 
     async def create_recurrent_payment(
-        self,
-        customer_id: str,
-        amount: float,
-        currency: str,
-        user_email: str,
-        payment_method,
+            self,
+            customer_id: str,
+            amount: float,
+            currency: str,
+            user_email: str,
+            payment_method,
     ):
         """Создание рекурентного платежа"""
         # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
@@ -108,9 +118,13 @@ class StripeClient:
 
     async def get_payment_data(self, payment_intents_id: str):
         """Получение данных о платеже"""
-        return await self._request(
+        # return await self._request(
+        #     method="GET", endpoint=f"/payment_intents/{payment_intents_id}"
+        # )
+        payment = await self._request(
             method="GET", endpoint=f"/payment_intents/{payment_intents_id}"
         )
+        return PaymentInner(**payment)
 
     async def create_refund(self, payment_intent_id: str, amount: int):
         data = {"payment_intent": payment_intent_id, "amount": amount}

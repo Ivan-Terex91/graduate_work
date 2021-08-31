@@ -33,7 +33,7 @@ class SubscriptionState(Enum):
     """Статусы подписок"""
 
     CANCELED = "canceled"
-    PAID = "paid"
+    PAID = "paid" # TODO а зачем тут этот статус??!! Олачен заказ может быть, но не сущность подписки
     ACTIVE = "active"
     INACTIVE = "inactive"
 
@@ -60,6 +60,7 @@ class PaymentInner(BaseModel):
 
     id: str
     amount: int
+    status: str
 
 
 class AuthUserInner(BaseModel):

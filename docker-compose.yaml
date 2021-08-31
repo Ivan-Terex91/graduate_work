@@ -49,6 +49,16 @@ services:
       - db
       - admin-panel
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile-scheduler
+    depends_on:
+      - db
+      - api
+    env_file:
+      - ./.env
+    restart: always
 
   nginx:
     image: nginx:alpine

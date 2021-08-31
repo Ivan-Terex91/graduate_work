@@ -13,7 +13,7 @@ class UserSubscriptionRepository:
 
     @staticmethod
     async def get_user_subscription(
-        user_id: UUID4, status=list[SubscriptionState]
+            user_id: UUID4, status=list[SubscriptionState]
     ) -> Optional[UsersSubscription]:
         """Метод возвращает подписку пользователя"""
         return await UsersSubscription.get_or_none(
@@ -22,7 +22,7 @@ class UserSubscriptionRepository:
 
     @staticmethod
     async def update_user_subscription_status(
-        subscription_id: UUID4, status: SubscriptionState
+            subscription_id: UUID4, status: SubscriptionState
     ) -> None:
         """Мето обновляет статус подписки пользователя"""
         await UsersSubscription.filter(id=subscription_id).update(
@@ -42,3 +42,8 @@ class UserSubscriptionRepository:
         return await UsersSubscription.filter(user_id=user_id).select_related(
             "subscription"
         )
+
+    @staticmethod
+    async def create_user_subscriptions():
+        """Метод создания подписки пользователя"""
+        pass
