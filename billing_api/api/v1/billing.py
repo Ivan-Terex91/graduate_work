@@ -2,8 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from core.auth import auth_current_user
 from core.stripe import get_stripe
-
-from models.db_models import Order, UsersSubscription, Subscription
 from starlette import status
 
 from models.api_models import PaymentDataIn
@@ -13,6 +11,7 @@ from core.logger import logger
 from core.helpers import get_refund_amount, get_amount
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
+from db.repositories.subscription import SubscriptionRepository
 from tortoise.transactions import in_transaction
 
 router = APIRouter()
@@ -36,8 +35,8 @@ async def create_subscription_payment(
     if user_order:
         logger.debug(f"Error !!!!!!!, user {auth_user.get('user_id')} has order in progress")
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has order in progress")
-    subscription = await Subscription.get_or_none(
-        id=payment_data.subscription_id)  # TODO надо ли создавать репу???!!!!!
+
+    subscription = await SubscriptionRepository.get_subscription(subscription_id=payment_data.subscription_id)
 
     # TODO далее наверное транзакция должна быть и логи логи логи!!!!
     async with in_transaction():

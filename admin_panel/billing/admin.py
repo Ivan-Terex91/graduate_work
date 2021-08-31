@@ -21,7 +21,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     list_display = ("id", "title", "period", "type", "price", "currency")
     search_fields = ("title", "period", "type")
-    list_filter = ("period", "type")
+    list_filter = ("period", "type", "automatic")
     inlines = [SubscriptionMovieInLine]
     readonly_fields = ("created", "modified")
 

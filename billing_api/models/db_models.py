@@ -27,7 +27,7 @@ class AbstractModel(Model):
 class Subscription(AbstractModel):
     """Подписки"""
 
-    title = fields.CharField(max_length=255, null=False)
+    title = fields.CharField(max_length=255, unique=True, null=False)
     description = fields.TextField()
     period: SubscriptionPeriod = fields.IntEnumField(enum_type=SubscriptionPeriod)
     type: SubscriptionType = fields.CharEnumField(enum_type=SubscriptionType)

@@ -37,7 +37,7 @@ class Subscription(TimeStampedModel):
         verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
     )
     title = models.CharField(
-        verbose_name=_("название"), max_length=255, null=False, blank=False
+        verbose_name=_("название"), unique=True, max_length=255, null=False, blank=False
     )
     description = models.TextField(verbose_name=_("описание"))
     period = models.PositiveIntegerField(
@@ -71,13 +71,13 @@ class Subscription(TimeStampedModel):
         verbose_name_plural = _("подписки")
         constraints = [
             models.UniqueConstraint(
-                fields=["title", "period", "type"], name="subscription_unique"
+                fields=["period", "type", "automatic"], name="subscription_unique"
             )
         ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_subscription"'
 
     def __str__(self):
-        return f"{self.title} - {self.type} - {self.period}"
+        return f"{self.title} - {self.type} - {self.period} - {self.automatic}"
 
 
 class SubscriptionMovie(TimeStampedModel):
