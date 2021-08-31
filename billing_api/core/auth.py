@@ -4,7 +4,8 @@ from typing import Optional
 import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
-from pydantic import UUID4
+
+from models.common_models import AuthUserInner
 
 logger = logging.getLogger(__name__)
 
@@ -49,5 +50,4 @@ async def auth_current_user(
         raise credentials_exception
 
     data = response.json()
-    # return UUID4(data["user_id"])
-    return data
+    return AuthUserInner(**data)

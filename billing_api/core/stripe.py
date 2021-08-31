@@ -7,6 +7,7 @@ from aiohttp import ClientSession
 from pydantic import UUID4
 
 from .config import STRIPE_BASE_URL, STRIPE_API_KEY
+from models.common_models import PaymentInner, RefundInner, CustomerInner
 
 
 class StripeClient:
@@ -46,8 +47,8 @@ class StripeClient:
 
         if "error" in response:
             if response["error"]["code"] == "resource_already_exists":
-                return customer_data
-        return response
+                return CustomerInner(**customer_data)
+        return CustomerInner(**response)
 
     async def create_payment(
             self,
@@ -67,9 +68,10 @@ class StripeClient:
             "receipt_email": user_email,
             "payment_method": "pm_card_visa",  # TODO с этим нужно доразобраться!!!!
         }  # TODO payment_method
-        return await self._request(
+        payment = await self._request(
             method="POST", endpoint="/payment_intents", data=payment_intent_data
         )
+        return PaymentInner(**payment)
 
     async def create_recurrent_payment(
             self,
@@ -112,7 +114,8 @@ class StripeClient:
 
     async def create_refund(self, payment_intent_id: str, amount: int):
         data = {"payment_intent": payment_intent_id, "amount": amount}
-        return await self._request(method="POST", endpoint="/refunds", data=data)
+        refund = await self._request(method="POST", endpoint="/refunds", data=data)
+        return RefundInner(**refund)
 
     async def get_refund_data(self, refund_id: str):
         return await self._request(method="GET", endpoint=f"/refunds/{refund_id}")

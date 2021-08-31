@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Optional
 
 from pydantic import UUID4
@@ -24,9 +25,10 @@ class UserSubscriptionRepository:
         await UsersSubscription.filter(id=subscription_id).update(status=status, modified=timezone.now())
 
     @staticmethod
-    async def get_active_subscriptions_automatic() -> list[UsersSubscription]:
-        """Метод возвращает активные 'автоматические' подписки"""
-        return await UsersSubscription.filter(status="active", subscription__automatic=True).select_related(
+    async def get_expiring_active_subscriptions_automatic() -> list[UsersSubscription]:
+        """Метод возвращает активные 'автоматические' подписки, срок действия которых истекает сегодня"""
+        return await UsersSubscription.filter(status="active", subscription__automatic=True,
+                                              end_date=date.today()).select_related(
             "subscription"
         )
 

@@ -1,4 +1,8 @@
+from datetime import date
 from enum import Enum, IntEnum
+from typing import Optional
+
+from pydantic import BaseModel, UUID4
 
 
 class SubscriptionPeriod(IntEnum):
@@ -49,3 +53,33 @@ class OrderStatus(Enum):
     PROGRESS = "progress"
     PAID = "paid"
     ERROR = "error"
+
+
+class PaymentInner(BaseModel):
+    """Внутренняя модель платежа"""
+    id: str
+    amount: int
+
+
+class RefundInner(BaseModel):
+    """Внутренняя модель возврата"""
+    id: str
+    amount: str
+
+
+class AuthUserInner(BaseModel):
+    """Внутренняя модель авторизованного пользователя"""
+    user_id: UUID4
+    user_email: str
+    first_name: Optional[str]
+    last_name: Optional[str]
+    birthdate: Optional[date]
+    country: str
+    user_roles: list[str]
+    user_permissions: list[str]
+
+
+class CustomerInner(BaseModel):
+    """Внутренняя модель покупателя"""
+    id: str
+    email: str
