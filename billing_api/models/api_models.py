@@ -3,14 +3,9 @@ from typing import Optional
 
 from pydantic import UUID4, BaseModel, Field
 
-from models.common_models import (
-    Currency,
-    OrderStatus,
-    PaymentSystem,
-    SubscriptionPeriod,
-    SubscriptionState,
-    SubscriptionType,
-)
+from models.common_models import (Currency, OrderStatus, PaymentSystem,
+                                  SubscriptionPeriod, SubscriptionState,
+                                  SubscriptionType)
 
 
 class SubscriptionApiModel(BaseModel):
@@ -59,6 +54,7 @@ class OrderApiModel(BaseModel):
 
 class PaymentDataIn(BaseModel):
     """Входные данные для оплаты подписки"""
+
     subscription_id: UUID4
     payment_system: PaymentSystem
     currency: Currency
@@ -69,4 +65,5 @@ class PaymentDataIn(BaseModel):
 
 class RefundDataIn(BaseModel):
     """Входные данные для возврата денег за подписку"""
+
     subscription_id: UUID4

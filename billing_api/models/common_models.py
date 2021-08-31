@@ -2,7 +2,7 @@ from datetime import date
 from enum import Enum, IntEnum
 from typing import Optional
 
-from pydantic import BaseModel, UUID4
+from pydantic import UUID4, BaseModel
 
 
 class SubscriptionPeriod(IntEnum):
@@ -57,18 +57,14 @@ class OrderStatus(Enum):
 
 class PaymentInner(BaseModel):
     """Внутренняя модель платежа"""
+
     id: str
     amount: int
 
 
-class RefundInner(BaseModel):
-    """Внутренняя модель возврата"""
-    id: str
-    amount: str
-
-
 class AuthUserInner(BaseModel):
     """Внутренняя модель авторизованного пользователя"""
+
     user_id: UUID4
     user_email: str
     first_name: Optional[str]
@@ -81,5 +77,13 @@ class AuthUserInner(BaseModel):
 
 class CustomerInner(BaseModel):
     """Внутренняя модель покупателя"""
+
     id: str
     email: str
+
+
+class RefundInner(BaseModel):
+    """Внутренняя модель возврата"""
+
+    id: str
+    amount: str

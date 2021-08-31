@@ -2,12 +2,12 @@ from typing import Optional
 
 import stripe  # TODO найминг
 from aiohttp import ClientSession
-
 # TODO повесить backoffы
 from pydantic import UUID4
 
-from .config import STRIPE_BASE_URL, STRIPE_API_KEY
-from models.common_models import PaymentInner, RefundInner, CustomerInner
+from models.common_models import CustomerInner, PaymentInner, RefundInner
+
+from .config import STRIPE_API_KEY, STRIPE_BASE_URL
 
 
 class StripeClient:
@@ -22,14 +22,14 @@ class StripeClient:
         }
 
     async def _request(
-            self, method: str, endpoint: str, headers: dict = None, data: dict = None
+        self, method: str, endpoint: str, headers: dict = None, data: dict = None
     ):
         async with ClientSession(headers=self.auth_header) as session:
             async with session.request(
-                    method=method,
-                    url=f"{self.base_url}{endpoint}",
-                    headers=headers,
-                    data=data,
+                method=method,
+                url=f"{self.base_url}{endpoint}",
+                headers=headers,
+                data=data,
             ) as resp:
                 response = await resp.json()
                 return response
@@ -51,12 +51,12 @@ class StripeClient:
         return CustomerInner(**response)
 
     async def create_payment(
-            self,
-            customer_id: str,
-            amount: float,
-            currency: str,
-            user_email: str,
-            # payment_method,
+        self,
+        customer_id: str,
+        amount: float,
+        currency: str,
+        user_email: str,
+        # payment_method,
     ):
         """Создание платежа"""
         # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
@@ -74,12 +74,12 @@ class StripeClient:
         return PaymentInner(**payment)
 
     async def create_recurrent_payment(
-            self,
-            customer_id: str,
-            amount: float,
-            currency: str,
-            user_email: str,
-            payment_method,
+        self,
+        customer_id: str,
+        amount: float,
+        currency: str,
+        user_email: str,
+        payment_method,
     ):
         """Создание рекурентного платежа"""
         # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,

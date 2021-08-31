@@ -3,14 +3,9 @@ from datetime import datetime
 from tortoise import fields, timezone
 from tortoise.models import Model
 
-from .common_models import (
-    Currency,
-    OrderStatus,
-    PaymentSystem,
-    SubscriptionPeriod,
-    SubscriptionState,
-    SubscriptionType,
-)
+from .common_models import (Currency, OrderStatus, PaymentSystem,
+                            SubscriptionPeriod, SubscriptionState,
+                            SubscriptionType)
 
 
 class AbstractModel(Model):

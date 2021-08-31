@@ -1,21 +1,24 @@
 import logging
 
 from fastapi import APIRouter, Depends
+
 from core.auth import auth_current_user
-from models.api_models import OrderApiModel, UserSubscriptionApiModel
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
+from models.api_models import OrderApiModel, UserSubscriptionApiModel
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get(
-    "/user/subscriptions", response_model=list[UserSubscriptionApiModel]
-)
-async def user_subscriptions(auth_user=Depends(auth_current_user)) -> list[UserSubscriptionApiModel]:
+@router.get("/user/subscriptions", response_model=list[UserSubscriptionApiModel])
+async def user_subscriptions(
+    auth_user=Depends(auth_current_user),
+) -> list[UserSubscriptionApiModel]:
     """Метод просмотра всех подписок пользователя"""
-    subscriptions = await UserSubscriptionRepository.get_user_subscriptions(user_id=auth_user.user_id)
+    subscriptions = await UserSubscriptionRepository.get_user_subscriptions(
+        user_id=auth_user.user_id
+    )
     logger.info(f"All subscriptions of the user {auth_user.user_id} are collected")
 
     return [

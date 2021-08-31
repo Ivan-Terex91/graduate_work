@@ -1,12 +1,12 @@
 from decimal import Decimal
 from typing import Optional
-from tortoise import timezone
-from pydantic import UUID4
 
-from models.common_models import OrderStatus
-from models.db_models import Order, Subscription
+from pydantic import UUID4
+from tortoise import timezone
 
 from models.api_models import PaymentDataIn
+from models.common_models import OrderStatus
+from models.db_models import Order, Subscription
 
 
 class OrderRepository:
@@ -15,12 +15,17 @@ class OrderRepository:
     @staticmethod
     async def get_order(user_id: UUID4, status: OrderStatus) -> Optional[Order]:
         """Метод возвращает заказ пользователя в обработке"""
-        return await Order.get_or_none(user_id=user_id, status=status,
-                                       refund=False).select_related("subscription")
+        return await Order.get_or_none(
+            user_id=user_id, status=status, refund=False
+        ).select_related("subscription")
 
     @staticmethod
-    async def create_order(user_id: UUID4, user_email: str, subscription: Subscription,
-                           payment_data: PaymentDataIn) -> Order:
+    async def create_order(
+        user_id: UUID4,
+        user_email: str,
+        subscription: Subscription,
+        payment_data: PaymentDataIn,
+    ) -> Order:
         """Метод создания заказа"""
         return await Order.create(
             user_id=user_id,
@@ -50,9 +55,13 @@ class OrderRepository:
         )
 
     @staticmethod
-    async def update_order_status(order_id: UUID4, external_id: str, status: OrderStatus) -> None:
+    async def update_order_status(
+        order_id: UUID4, external_id: str, status: OrderStatus
+    ) -> None:
         """Метод обновления статуса заказа"""
-        await Order.filter(id=order_id).update(external_id=external_id, status=status, modified=timezone.now())
+        await Order.filter(id=order_id).update(
+            external_id=external_id, status=status, modified=timezone.now()
+        )
 
     @staticmethod
     async def get_processing_orders() -> list[Order]:
