@@ -31,17 +31,17 @@ class OrderRepository:
         """Метод возвращает заказ по внешнему идентификатору заказа"""
         return await self._get_order(external_id=external_id)
 
-    async def get_order(
-        self, user_id: UUID4, status: OrderStatus
-    ) -> Optional[Order]:  # TODO тоже можно объединить
+    async def get_order(self, user_id: UUID4, status: OrderStatus) -> Optional[Order]:
         """Метод возвращает заказ пользователя в обработке"""
         return await self._get_order(user_id=user_id, status=status, refund=False)
 
     async def get_processing_orders(self) -> list[Order]:
         """Метод возваращает все заказы находящиеся в обработке"""
-        return await self._get_orders(
-            status=OrderStatus.PROGRESS, refund=False
-        )  # TODO может только заказы, не возвраты, на возвраты надо отдельный метод
+        return await self._get_orders(status=OrderStatus.PROGRESS, refund=False)
+
+    async def get_processing_refunds(self) -> list[Order]:
+        """Метод возваращает все возвраты находящиеся в обработке"""
+        return await self._get_orders(status=OrderStatus.PROGRESS, refund=True)
 
     async def get_user_orders(self, user_id: UUID4) -> list[Order]:
         """Метод возвращает все заказы пользователя"""

@@ -12,11 +12,11 @@ class UserSubscriptionRepository:
 
     @staticmethod
     async def get_user_subscription(
-        user_id: UUID4, status=list[SubscriptionState]
+        user_id: UUID4, status=list[SubscriptionState], **kwargs
     ) -> Optional[UsersSubscription]:
         """Метод возвращает подписку пользователя"""
         return await UsersSubscription.get_or_none(
-            user_id=user_id, status__in=status
+            user_id=user_id, status__in=status, **kwargs
         ).select_related("subscription")
 
     @staticmethod
@@ -59,6 +59,12 @@ class UserSubscriptionRepository:
         """Метод обновления статуса подписки пользователя"""
         await self._update_user_subscriptions(
             status=status, user_id=user_id, subscription=subscription
+        )
+
+    async def update_expired_user_subscription(self):
+        """Метод обновляет обновляет статус истёкшим подпискам"""
+        await self._update_user_subscriptions(
+            status=SubscriptionState.INACTIVE, end_date=date.today()
         )
 
     @staticmethod

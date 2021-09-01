@@ -27,13 +27,19 @@ async def create_subscription_payment(
     """Метод оформления (оплаты) подписки"""
     user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id,
-        status=[SubscriptionState.PAID, SubscriptionState.ACTIVE],
+        status=[
+            SubscriptionState.PAID,
+            SubscriptionState.ACTIVE,
+            SubscriptionState.CANCELED,
+        ],
     )
     if user_subscription:
         logger.error(
-            f"Error when paying for a subscription, user {auth_user.user_id} has active or paid subscription"
+            f"Error when paying for a subscription, user {auth_user.user_id} has active/not expired or paid subscription"
         )
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has subscriptions")
+
+    # TODO что если тут добавить проверку на отменённую, но не истёкшую подписку пока подписку(сделаю задачу в шедулере он будет истёкшие все переводить в неактивные)
 
     user_order = await order_repository.get_order(
         user_id=auth_user.user_id, status=OrderStatus.PROGRESS
@@ -58,7 +64,6 @@ async def create_subscription_payment(
         )
 
     async with in_transaction():
-        # TODO надо ли создавать подписку для пользователя ??!! Я думаю что пока нет, надо подумать
         order = await order_repository.create_order(
             user_id=auth_user.user_id,
             user_email=auth_user.user_email,
@@ -110,8 +115,9 @@ async def refund_subscription(
 ):
     """Метод возврата денег за подписку"""
     user_subscription = await user_subscription_repository.get_user_subscription(
-        user_id=auth_user.user_id, status=[SubscriptionState.ACTIVE]
-    )
+        user_id=auth_user.user_id,
+        status=[SubscriptionState.ACTIVE, SubscriptionState.CANCELED],
+    )  # TODO а тут тогда можно добавить автоматическую отменённую, но не истёкшую подписку(сделаю задачу в шедулере он будет истёкшие все переводить в неактивные)
     if not user_subscription:
         logger.error(
             f"Error when returning a subscription, user {auth_user.user_id} has no active subscription"
@@ -171,16 +177,19 @@ async def cancel_subscription(
     auth_user=Depends(auth_current_user),
     user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
-    """Метод отказа от подписки"""
+    """Метод отказа от подписки (отказа от автоматической пролонгации)"""
     user_subscription = await user_subscription_repository.get_user_subscription(
-        user_id=auth_user.user_id, status=[SubscriptionState.ACTIVE]
-    )
+        user_id=auth_user.user_id,
+        subscription__automatic=True,
+        status=[SubscriptionState.ACTIVE],
+    )  # TODO и этот метод надо доработать - активная автоматическая
     if not user_subscription:
         logger.info(
-            f"Error when canceling a subscription, user {auth_user.user_id} has no active subscription"
+            f"Error when canceling a subscription, user {auth_user.user_id} has no active automatic subscription"
         )
         raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail="User has no active subscription"
+            status.HTTP_404_NOT_FOUND,
+            detail="User has no active automatic subscription",
         )
 
     await user_subscription_repository.update_user_subscription_status_by_id(

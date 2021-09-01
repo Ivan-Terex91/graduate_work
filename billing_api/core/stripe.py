@@ -39,7 +39,7 @@ class StripeClient:
                 response = await resp.json()
                 return response
 
-    async def create_customer(self, user_id: UUID4, user_email: str):
+    async def create_customer(self, user_id: UUID4, user_email: str) -> CustomerInner:
         """Создание покупателя(клиента)"""
         customer_data = {
             "id": str(user_id),
@@ -62,7 +62,7 @@ class StripeClient:
         currency: str,
         user_email: str,
         # payment_method,
-    ):
+    ) -> PaymentInner:
         """Создание платежа"""
         # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
         #  скорее всего для реализации автоматичесих списаний
@@ -111,7 +111,7 @@ class StripeClient:
             data=data,
         )
 
-    async def get_payment_data(self, payment_intents_id: str):
+    async def get_payment_data(self, payment_intents_id: str) -> PaymentInner:
         """Получение данных о платеже"""
         payment = await self._request(
             method="GET", endpoint=f"/payment_intents/{payment_intents_id}"
@@ -119,12 +119,18 @@ class StripeClient:
         return PaymentInner(**payment)
 
     async def create_refund(self, payment_intent_id: str, amount: int):
+        """Создание возврата"""
         data = {"payment_intent": payment_intent_id, "amount": amount}
         refund = await self._request(method="POST", endpoint="/refunds", data=data)
         return RefundInner(**refund)
 
-    async def get_refund_data(self, refund_id: str):
-        return await self._request(method="GET", endpoint=f"/refunds/{refund_id}")
+    async def get_refund_data(self, refund_order_id: str) -> RefundInner:
+        """Получение данных о возврате"""
+        refund = await self._request(
+            method="GET", endpoint=f"/refunds/{refund_order_id}"
+        )
+        print(refund)
+        return RefundInner(**refund)
 
 
 async def get_stripe() -> StripeClient:

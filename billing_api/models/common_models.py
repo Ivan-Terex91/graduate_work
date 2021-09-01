@@ -83,8 +83,5 @@ class CustomerInner(BaseModel):
     email: str
 
 
-class RefundInner(BaseModel):
+class RefundInner(PaymentInner):
     """Внутренняя модель возврата"""
-
-    id: str
-    amount: int
