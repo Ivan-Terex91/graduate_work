@@ -1,30 +1,70 @@
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import UUID4
-from tortoise import timezone
-
 from models.api_models import PaymentDataIn
 from models.common_models import OrderStatus
 from models.db_models import Order, Subscription
+from pydantic import UUID4
+from tortoise import timezone
 
 
 class OrderRepository:
     """Класс для работы с таблицей заказов."""
 
     @staticmethod
-    async def get_order(user_id: UUID4, status: OrderStatus) -> Optional[Order]:  # TODO тоже можно объединить
+    async def _get_order(**kwargs) -> Optional[Order]:
+        """Получить заказ"""
+        return await Order.get_or_none(**kwargs).select_related("subscription")
+
+    @staticmethod
+    async def _get_orders(**kwargs) -> list[Order]:
+        """Получить список заказов"""
+        return await Order.filter(**kwargs).select_related("subscription")
+
+    @staticmethod
+    async def _update_order(order_id: UUID4, **kwargs) -> None:
+        """Обновить заказ"""
+        await Order.filter(id=order_id).update(modified=timezone.now(), **kwargs)
+
+    async def get_order_by_external_id(self, external_id: str) -> Optional[Order]:
+        # TODO тут подумай над аннотацией либо скорее всего проверкой в коде !!!???
+        """Метод возвращает заказ по внешнему идентификатору заказа"""
+        return await self._get_order(external_id=external_id)
+
+    async def get_order(
+        self, user_id: UUID4, status: OrderStatus
+    ) -> Optional[Order]:  # TODO тоже можно объединить
         """Метод возвращает заказ пользователя в обработке"""
-        return await Order.get_or_none(
-            user_id=user_id, status=status, refund=False
-        ).select_related("subscription")
+        return await self._get_order(user_id=user_id, status=status, refund=False)
+
+    async def get_processing_orders(self) -> list[Order]:
+        """Метод возваращает все заказы находящиеся в обработке"""
+        return await self._get_orders(
+            status=OrderStatus.PROGRESS, refund=False
+        )  # TODO может только заказы, не возвраты, на возвраты надо отдельный метод
+
+    async def get_user_orders(self, user_id: UUID4) -> list[Order]:
+        """Метод возвращает все заказы пользователя"""
+        return await self._get_orders(user_id=user_id)
+
+    async def update_order_external_id(
+        self, order_id: UUID4, external_id: str, status: OrderStatus
+    ) -> None:
+        """Метод обновления внешнего идентификатора заказа"""
+        await self._update_order(
+            order_id=order_id, external_id=external_id, status=status
+        )
+
+    async def update_order_status(self, order_id: UUID4, status: OrderStatus) -> None:
+        """Метод обновляет статус заказа"""
+        await self._update_order(order_id=order_id, status=status)
 
     @staticmethod
     async def create_order(
-            user_id: UUID4,
-            user_email: str,
-            subscription: Subscription,
-            payment_data: PaymentDataIn,
+        user_id: UUID4,
+        user_email: str,
+        subscription: Subscription,
+        payment_data: PaymentDataIn,
     ) -> Order:
         """Метод создания заказа"""
         return await Order.create(
@@ -53,33 +93,3 @@ class OrderRepository:
             created=timezone.now(),
             modified=timezone.now(),
         )
-
-    @staticmethod
-    async def update_order_status(
-            # TODO метод update надо подругому обыграть внизу есть повтор!! И вообще посмотреть на все методы всех репозиториев
-            order_id: UUID4, external_id: str, status: OrderStatus
-    ) -> None:
-        """Метод обновления статуса заказа"""
-        await Order.filter(id=order_id).update(
-            external_id=external_id, status=status, modified=timezone.now()
-        )
-
-    @staticmethod
-    async def get_processing_orders() -> list[Order]:
-        """Метод возваращает все заказы находящиеся в обработке"""
-        return await Order.filter(status="progress").select_related("subscription")
-
-    @staticmethod
-    async def get_orders(user_id: UUID4) -> list[Order]:
-        """Метод возвращает все заказы пользователя"""
-        return await Order.filter(user_id=user_id).select_related("subscription")
-
-    @staticmethod
-    async def get_order_by_external_id(external_id: str) -> Order:
-        """Метод возвращает заказ по внешнему идентификатору заказа"""
-        return await Order.get(external_id=external_id).select_related("subscription")
-
-    @staticmethod
-    async def update_only_order_status(order_id: UUID4, status: OrderStatus):
-        """Метод обновляет статус заказа"""
-        return await Order.filter(order_id=order_id).update(status=status, modified=timezone.now())

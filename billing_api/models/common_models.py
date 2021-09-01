@@ -33,7 +33,7 @@ class SubscriptionState(Enum):
     """Статусы подписок"""
 
     CANCELED = "canceled"
-    PAID = "paid" # TODO а зачем тут этот статус??!! Олачен заказ может быть, но не сущность подписки
+    PAID = "paid"  # TODO а зачем тут этот статус??!! Олачен заказ может быть, но не сущность подписки
     ACTIVE = "active"
     INACTIVE = "inactive"
 
@@ -87,4 +87,4 @@ class RefundInner(BaseModel):
     """Внутренняя модель возврата"""
 
     id: str
-    amount: str
+    amount: int

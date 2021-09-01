@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from tortoise import fields, timezone
 from tortoise.models import Model
 

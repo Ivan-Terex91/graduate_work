@@ -1,11 +1,11 @@
 import datetime
+from decimal import Decimal
 from typing import Optional
-
-from pydantic import UUID4, BaseModel, Field
 
 from models.common_models import (Currency, OrderStatus, PaymentSystem,
                                   SubscriptionPeriod, SubscriptionState,
                                   SubscriptionType)
+from pydantic import UUID4, BaseModel, Field
 
 
 class SubscriptionApiModel(BaseModel):
@@ -15,7 +15,7 @@ class SubscriptionApiModel(BaseModel):
     description: str
     period: SubscriptionPeriod
     type: SubscriptionType
-    price: float
+    price: Decimal
     currency: Currency
     automatic: bool
 
@@ -48,7 +48,7 @@ class OrderApiModel(BaseModel):
     payment_system: PaymentSystem
     currency: Currency
     discount: int
-    total_cost: float
+    total_cost: Decimal
     refund: bool
 
 
@@ -59,7 +59,7 @@ class PaymentDataIn(BaseModel):
     payment_system: PaymentSystem
     currency: Currency
     discount: int = Field(ge=0, le=99)
-    total_cost: float
+    total_cost: Decimal
     # TODO можно включить цену, валюту, но можно взять и через id это. Плюс открытый вопрос с payment method
 
 

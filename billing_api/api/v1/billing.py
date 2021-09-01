@@ -1,17 +1,16 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
-from tortoise.transactions import in_transaction
-
 from core.auth import auth_current_user
 from core.helpers import get_amount, get_refund_amount
 from core.stripe import get_stripe
 from db.repositories.order import OrderRepository
 from db.repositories.subscription import SubscriptionRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
+from fastapi import APIRouter, Depends, HTTPException
 from models.api_models import PaymentDataIn
 from models.common_models import OrderStatus, SubscriptionState
+from starlette import status
+from tortoise.transactions import in_transaction
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -22,10 +21,11 @@ async def create_subscription_payment(
     payment_data: PaymentDataIn,  # TODO может быть OrderDataIn
     auth_user=Depends(auth_current_user),
     stripe_client=Depends(get_stripe),
+    order_repository=Depends(OrderRepository),
+    user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод оформления (оплаты) подписки"""
-
-    user_subscription = await UserSubscriptionRepository.get_user_subscription(
+    user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id,
         status=[SubscriptionState.PAID, SubscriptionState.ACTIVE],
     )
@@ -35,7 +35,7 @@ async def create_subscription_payment(
         )
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has subscriptions")
 
-    user_order = await OrderRepository.get_order(
+    user_order = await order_repository.get_order(
         user_id=auth_user.user_id, status=OrderStatus.PROGRESS
     )
     if user_order:
@@ -59,7 +59,7 @@ async def create_subscription_payment(
 
     async with in_transaction():
         # TODO надо ли создавать подписку для пользователя ??!! Я думаю что пока нет, надо подумать
-        order = await OrderRepository.create_order(
+        order = await order_repository.create_order(
             user_id=auth_user.user_id,
             user_email=auth_user.user_email,
             subscription=subscription,
@@ -73,13 +73,13 @@ async def create_subscription_payment(
         payment = await stripe_client.create_payment(
             customer_id=customer.id,
             user_email=customer.email,
-            amount=get_amount(subscription.price),
+            amount=get_amount(order.total_cost),
             currency=subscription.currency.value,
         )
 
         logger.info(f"Payment {payment.id} created for user {auth_user.user_id}")
 
-        await OrderRepository.update_order_status(
+        await order_repository.update_order_external_id(
             order_id=order.id, external_id=payment.id, status=OrderStatus.PROGRESS
         )
         logger.info(
@@ -105,9 +105,11 @@ async def refund_subscription(
     # refund_data: RefundDataIn,  # TODO теоритически подписка активная может быть только одна в нашем сервисе ??!!
     auth_user=Depends(auth_current_user),
     stripe_client=Depends(get_stripe),
+    order_repository=Depends(OrderRepository),
+    user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод возврата денег за подписку"""
-    user_subscription = await UserSubscriptionRepository.get_user_subscription(
+    user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id, status=[SubscriptionState.ACTIVE]
     )
     if not user_subscription:
@@ -118,7 +120,7 @@ async def refund_subscription(
             status.HTTP_404_NOT_FOUND, detail="User has no active subscription"
         )
 
-    user_order = await OrderRepository.get_order(
+    user_order = await order_repository.get_order(
         user_id=auth_user.user_id, status=OrderStatus.PAID
     )
     if not user_order:
@@ -134,7 +136,7 @@ async def refund_subscription(
     )
 
     async with in_transaction():
-        refund_order = await OrderRepository.create_refund_order(
+        refund_order = await order_repository.create_refund_order(
             order=user_order, total_cost=refund_amount
         )
         logger.info(
@@ -144,14 +146,14 @@ async def refund_subscription(
             payment_intent_id=user_order.external_id, amount=get_amount(refund_amount)
         )
 
-        await OrderRepository.update_order_status(
+        await order_repository.update_order_external_id(
             order_id=refund_order.id, external_id=refund.id, status=OrderStatus.PROGRESS
         )
         logger.info(
             f"Refund order {refund_order.id} update status to progress and has external_id {refund.id}"
         )
 
-        await UserSubscriptionRepository.update_user_subscription_status(
+        await user_subscription_repository.update_user_subscription_status_by_id(
             subscription_id=user_subscription.id, status=SubscriptionState.INACTIVE
         )
         logger.info(f"Subscription {user_subscription.id} update status to inactive")
@@ -167,9 +169,10 @@ async def refund_subscription(
 @router.post("/subscription/cancel")
 async def cancel_subscription(
     auth_user=Depends(auth_current_user),
+    user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод отказа от подписки"""
-    user_subscription = await UserSubscriptionRepository.get_user_subscription(
+    user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id, status=[SubscriptionState.ACTIVE]
     )
     if not user_subscription:
@@ -180,7 +183,7 @@ async def cancel_subscription(
             status.HTTP_404_NOT_FOUND, detail="User has no active subscription"
         )
 
-    await UserSubscriptionRepository.update_user_subscription_status(
+    await user_subscription_repository.update_user_subscription_status_by_id(
         subscription_id=user_subscription.id, status=SubscriptionState.CANCELED
     )
     logger.info(f"Subscription {user_subscription.id} update status to canceled")
