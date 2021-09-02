@@ -12,17 +12,19 @@ from models.common_models import OrderStatus, SubscriptionState
 from starlette import status
 from tortoise.transactions import in_transaction
 
+from db.repositories.payment_method import PaymentMethodRepository
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 @router.post("/subscription/payment/create")
 async def create_subscription_payment(
-    payment_data: PaymentDataIn,  # TODO может быть OrderDataIn
-    auth_user=Depends(auth_current_user),
-    stripe_client=Depends(get_stripe),
-    order_repository=Depends(OrderRepository),
-    user_subscription_repository=Depends(UserSubscriptionRepository),
+        payment_data: PaymentDataIn,  # TODO может быть OrderDataIn
+        auth_user=Depends(auth_current_user),
+        stripe_client=Depends(get_stripe),
+        order_repository=Depends(OrderRepository),
+        user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод оформления (оплаты) подписки"""
     user_subscription = await user_subscription_repository.get_user_subscription(
@@ -63,23 +65,35 @@ async def create_subscription_payment(
             status.HTTP_404_NOT_FOUND, detail="Subscription does not exist"
         )
 
+    stripe_payment_method = await stripe_client.create_payment_method(
+        payment_method_data=payment_data.payment_method)  # TODO сходить в страйп и создать метод
+    print(stripe_payment_method)
+
+    payment_method = await PaymentMethodRepository.create_payment_method(payment_method_data=stripe_payment_method,
+                                                                         user_id=auth_user.user_id)
+    print(payment_method)
+
     async with in_transaction():
         order = await order_repository.create_order(
             user_id=auth_user.user_id,
             user_email=auth_user.user_email,
             subscription=subscription,
             payment_data=payment_data,
+            payment_method=payment_method
         )
+        print(order)
         logger.info(f"Order {order.id} created for user {auth_user.user_id}")
 
         customer = await stripe_client.create_customer(
             user_id=order.user_id, user_email=order.user_email
         )
+
         payment = await stripe_client.create_payment(
             customer_id=customer.id,
             user_email=customer.email,
             amount=get_amount(order.total_cost),
-            currency=subscription.currency.value,
+            currency=order.currency.value,
+            payment_method_id=order.payment_method.id
         )
 
         logger.info(f"Payment {payment.id} created for user {auth_user.user_id}")
@@ -95,23 +109,36 @@ async def create_subscription_payment(
 
 @router.post("/subscription/payment/confirm")
 async def confirm_subscription_payment(
-    payment_id: str,
-    auth_user=Depends(auth_current_user),
-    stripe_client=Depends(get_stripe),
+        payment_id: str,
+        auth_user=Depends(auth_current_user),
+        stripe_client=Depends(get_stripe),
+        order_repository=Depends(OrderRepository),
 ):
     """Метод подтверждения платёжа пользователем"""
     # TODO пока это заглушка и данные о payment_method в stripe_client захардкожены
-    confirm_payment = await stripe_client.confirm_payment(payment_id=payment_id)
-    logger.info(f"Payment {payment_id} has confirm")
+    user_order = await order_repository.get_order(
+        user_id=auth_user.user_id,
+        status=OrderStatus.PROGRESS,
+    )
+    if not user_order:
+        logger.error(
+            f"Error when confirm payment a subscription, user {auth_user.user_id} has no processing orders"
+        )
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail="User has no processing orders"
+        )
+
+    await stripe_client.confirm_payment(payment_id=payment_id, payment_method=user_order.payment_method.id)
+    # TODO далее работает шедуллер
 
 
 @router.post("/subscription/refund")
 async def refund_subscription(
-    # refund_data: RefundDataIn,  # TODO теоритически подписка активная может быть только одна в нашем сервисе ??!!
-    auth_user=Depends(auth_current_user),
-    stripe_client=Depends(get_stripe),
-    order_repository=Depends(OrderRepository),
-    user_subscription_repository=Depends(UserSubscriptionRepository),
+        # refund_data: RefundDataIn,  # TODO теоритически подписка активная может быть только одна в нашем сервисе ??!!
+        auth_user=Depends(auth_current_user),
+        stripe_client=Depends(get_stripe),
+        order_repository=Depends(OrderRepository),
+        user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод возврата денег за подписку"""
     user_subscription = await user_subscription_repository.get_user_subscription(
@@ -120,7 +147,7 @@ async def refund_subscription(
     )  # TODO а тут тогда можно добавить автоматическую отменённую, но не истёкшую подписку(сделаю задачу в шедулере он будет истёкшие все переводить в неактивные)
     if not user_subscription:
         logger.error(
-            f"Error when returning a subscription, user {auth_user.user_id} has no active subscription"
+            f"Error when refunding a subscription, user {auth_user.user_id} has no active subscription"
         )
         raise HTTPException(
             status.HTTP_404_NOT_FOUND, detail="User has no active subscription"
@@ -178,8 +205,8 @@ async def refund_subscription(
 
 @router.post("/subscription/cancel")
 async def cancel_subscription(
-    auth_user=Depends(auth_current_user),
-    user_subscription_repository=Depends(UserSubscriptionRepository),
+        auth_user=Depends(auth_current_user),
+        user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод отказа от подписки (отказа от автоматической пролонгации)"""
     user_subscription = await user_subscription_repository.get_user_subscription(

@@ -3,7 +3,7 @@ from tortoise.models import Model
 
 from .common_models import (Currency, OrderStatus, PaymentSystem,
                             SubscriptionPeriod, SubscriptionState,
-                            SubscriptionType)
+                            SubscriptionType, PaymentMethodType)
 
 
 class AbstractModel(Model):
@@ -55,19 +55,21 @@ class UsersSubscription(AbstractModel):
         return f"{self.user_id} - {self.subscription} - {self.status}"
 
 
-# class PaymentMethod(AbstractModel):
-#     """Способы оплаты"""
-#
-#     payment_system: PaymentSystem = fields.CharEnumField(
-#         enum_type=PaymentSystem, default=PaymentSystem.STRIPE
-#     )
-#     type = fields.CharField(max_length=50, null=False)
-#
-#     class Meta:
-#         table = "billing_paymentmethod"
-#
-#     def __str__(self):
-#         return f"{self.payment_system} - {self.type}"
+class PaymentMethod(Model):
+    """Модель методов оплаты"""
+    id = fields.CharField(pk=True, max_length=50)
+    user_id = fields.UUIDField(null=False)
+    type: PaymentMethodType = fields.CharEnumField(enum_type=PaymentMethodType,
+                                                   default=PaymentMethodType.CARD)
+
+    created = fields.DatetimeField(default=timezone.now())
+    modified = fields.DatetimeField(default=timezone.now())
+
+    def __str__(self):
+        return f"{self.id} - {self.user_id} - {self.type}"
+
+    class Meta:
+        table = "billing_paymentmethod"
 
 
 class Order(AbstractModel):
@@ -82,10 +84,11 @@ class Order(AbstractModel):
     status: OrderStatus = fields.CharEnumField(
         enum_type=OrderStatus, default=OrderStatus.CREATED
     )
-    # payment_method: fields.ForeignKeyRelation[PaymentMethod] = fields.ForeignKeyField(
-    #     "billing.PaymentMethod",
-    #     on_delete=fields.RESTRICT,
-    # ) # TODO может просто отдельно payment_method должен быть!!!???
+    payment_method: fields.ForeignKeyRelation[PaymentMethod] = fields.ForeignKeyField(
+        "billing.PaymentMethod",
+        on_delete=fields.RESTRICT,
+    )
+    # TODO может просто отдельно payment_method должен быть!!!???
     payment_system: PaymentSystem = fields.CharEnumField(
         enum_type=PaymentSystem, default=PaymentSystem.STRIPE
     )

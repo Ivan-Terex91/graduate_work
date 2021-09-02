@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional
 
-from models.api_models import PaymentDataIn
+from models.api_models import PaymentDataIn, PaymentMethodDataOut
 from models.common_models import OrderStatus
 from models.db_models import Order, Subscription
 from pydantic import UUID4
@@ -14,12 +14,12 @@ class OrderRepository:
     @staticmethod
     async def _get_order(**kwargs) -> Optional[Order]:
         """Получить заказ"""
-        return await Order.get_or_none(**kwargs).select_related("subscription")
+        return await Order.get_or_none(**kwargs).prefetch_related("subscription", "payment_method")
 
     @staticmethod
     async def _get_orders(**kwargs) -> list[Order]:
         """Получить список заказов"""
-        return await Order.filter(**kwargs).select_related("subscription")
+        return await Order.filter(**kwargs).prefetch_related("subscription", "payment_method")
 
     @staticmethod
     async def _update_order(order_id: UUID4, **kwargs) -> None:
@@ -69,6 +69,7 @@ class OrderRepository:
         user_email: str,
         subscription: Subscription,
         payment_data: PaymentDataIn,
+        payment_method: PaymentMethodDataOut
     ) -> Order:
         """Метод создания заказа"""
         return await Order.create(
@@ -78,6 +79,7 @@ class OrderRepository:
             currency=payment_data.currency,
             discount=payment_data.discount,
             total_cost=payment_data.total_cost,
+            payment_method=payment_method,
             refund=False,
             created=timezone.now(),
             modified=timezone.now(),
@@ -93,6 +95,7 @@ class OrderRepository:
             currency=order.currency,
             discount=0,
             total_cost=total_cost,
+            payment_method=order.payment_method,
             refund=True,
             created=timezone.now(),
             modified=timezone.now(),

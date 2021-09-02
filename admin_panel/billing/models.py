@@ -185,6 +185,30 @@ class PaymentSystem(models.TextChoices):
 #         verbose_name = _("cпособ оплаты")
 #         verbose_name_plural = _("cпособы оплаты")
 #         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_paymentmethod"'
+#
+class PaymentMethodType(models.TextChoices):
+    """Тип метода оплаты"""
+    CARD = "card", _("card")
+
+
+class PaymentMethod(TimeStampedModel):
+    """Модель методов оплаты"""
+    id = models.CharField(
+        verbose_name=_("идентификатор"), primary_key=True, editable=False, max_length=50
+    )
+    user_id = models.UUIDField(
+        verbose_name=_("идентификатор клиента"), null=False, blank=False
+    )
+    type = models.CharField(verbose_name=_("тип"), choices=PaymentMethodType.choices, max_length=10,
+                            default=PaymentMethodType.CARD, null=False, blank=False)
+
+    def __str__(self):
+        return f"{self.id} - {self.type}"
+
+    class Meta:
+        verbose_name = _("метод оплаты")
+        verbose_name_plural = _("методы оплаты")
+        db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_paymentmethod"'
 
 
 class OrderStatus(models.TextChoices):
@@ -200,7 +224,7 @@ class Order(TimeStampedModel):
     """Заказы"""
 
     id = models.UUIDField(
-        verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
+        verbose_name=_("идентификатор"), primary_key=True, default=uuid4
     )
     external_id = models.CharField(verbose_name=_("внешний идентификатор"), max_length=40, null=True,
                                    blank=True)
@@ -221,13 +245,13 @@ class Order(TimeStampedModel):
         null=False,
         blank=False,
     )
-    # payment_method = models.ForeignKey(
-    #     verbose_name=_("способ оплаты"),
-    #     to="PaymentMethod",
-    #     on_delete=models.RESTRICT,
-    #     null=False,
-    #     blank=False,
-    # )
+    payment_method = models.ForeignKey(
+        verbose_name=_("метод оплаты"),
+        to="PaymentMethod",
+        on_delete=models.RESTRICT,
+        null=False,
+        blank=False,
+    )
     payment_system = models.CharField(verbose_name=_("Платёжная система"), max_length=20, choices=PaymentSystem.choices,
                                       default=PaymentSystem.STRIPE)
     currency = models.CharField(

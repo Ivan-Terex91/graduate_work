@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # from .models import (Order, PaymentMethod, Subscription, SubscriptionMovie,
 #                      UsersSubscription)
-from .models import (Order, Subscription, SubscriptionMovie,
+from .models import (Order, PaymentMethod, Subscription, SubscriptionMovie,
                      UsersSubscription)
 
 
@@ -33,13 +33,16 @@ class UsersSubscriptionAdmin(admin.ModelAdmin):
     list_display = ("id", "user_id", "subscription", "status")
     search_fields = ("user_id", "subscription", "status")
     readonly_fields = ("created", "modified")
-#
-# @admin.register(PaymentMethod)
-# class PaymentMethodAdmin(admin.ModelAdmin):
-#     """Способы оплаты"""
-#
-#     list_display = ("id", "payment_system", "type")
-#     list_filter = ("payment_system", "type")
+
+
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(admin.ModelAdmin):
+    """Методы оплаты"""
+
+    list_display = ("id", "user_id", "type")
+    readonly_fields = ("id",)
+    search_fields = ("user_id",)
+    list_filter = ("type",)
 
 
 @admin.register(Order)
@@ -50,4 +53,3 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ("user_id", "subscription")
     list_filter = ("status", "refund")
     readonly_fields = ("created", "modified")
-

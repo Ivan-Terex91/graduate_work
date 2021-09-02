@@ -4,7 +4,8 @@ from typing import Optional
 
 from models.common_models import (Currency, OrderStatus, PaymentSystem,
                                   SubscriptionPeriod, SubscriptionState,
-                                  SubscriptionType)
+                                  SubscriptionType, PaymentMethodType)
+
 from pydantic import UUID4, BaseModel, Field
 
 
@@ -52,6 +53,33 @@ class OrderApiModel(BaseModel):
     refund: bool
 
 
+class PaymentMethodData(BaseModel):
+    """Модель для метода оплаты картой"""
+
+    type: PaymentMethodType
+    card_number: str = Field(min_length=16, max_length=16)
+    card_exp_month: int = Field(ge=datetime.date.today().month, le=12)
+    card_exp_year: int = Field(ge=datetime.date.today().year)
+    card_cvc: str = Field(min_length=3, max_length=3)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "type": "card",
+                "card_number": "4242424242424242",
+                "card_exp_month": 9,
+                "card_exp_year": 2022,
+                "card_cvc": "314",
+            }
+        }
+
+
+class PaymentMethodDataOut(BaseModel):
+    """Модель платёжного метода из Stripe"""
+    id: str
+    type: PaymentMethodType
+
+
 class PaymentDataIn(BaseModel):
     """Входные данные для оплаты подписки"""
 
@@ -60,6 +88,7 @@ class PaymentDataIn(BaseModel):
     currency: Currency
     discount: int = Field(ge=0, le=99)
     total_cost: Decimal
+    payment_method: PaymentMethodData
     # TODO можно включить цену, валюту, но можно взять и через id это. Плюс открытый вопрос с payment method
 
 

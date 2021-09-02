@@ -85,3 +85,9 @@ class CustomerInner(BaseModel):
 
 class RefundInner(PaymentInner):
     """Внутренняя модель возврата"""
+
+
+class PaymentMethodType(Enum):
+    """Тип метода оплаты"""
+
+    CARD = "card"

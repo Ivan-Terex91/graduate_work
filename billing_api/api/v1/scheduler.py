@@ -52,8 +52,8 @@ async def check_order_payment(
     """Метод проверки оплаты заказа"""
     # TODO тут ошибка если придёт возватный внешний идентификатор
     payment = await stripe_client.get_payment_data(payment_intents_id=order_external_id)
-    logger.info(f"The order with external_id {order_external_id} is paid")
     if payment.status == "succeeded":
+        logger.info(f"The order with external_id {order_external_id} is paid")
         order = await order_repository.get_order_by_external_id(external_id=payment.id)
         async with in_transaction():
             await order_repository.update_order_status(
