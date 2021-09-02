@@ -4,34 +4,46 @@ from core.stripe import get_stripe
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
 from fastapi import APIRouter, Depends
-from models.api_models import OrderApiModel, UserSubscriptionApiModel
+from models.api_models import OrderApiModel, UserSubscriptionApiModel, ExpireUserSubscriptionData
 from models.common_models import OrderStatus, SubscriptionState
 from tortoise.transactions import in_transaction
+
+from models.db_models import UsersSubscription
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 @router.get(
-    "/subscriptions/automatic/active", response_model=list[UserSubscriptionApiModel]
+    "/subscriptions/automatic/active", response_model=list[ExpireUserSubscriptionData]
 )
 async def expiring_active_subscriptions_automatic(
-    user_subscription_repository=Depends(UserSubscriptionRepository),
-) -> list[UserSubscriptionApiModel]:
+        user_subscription_repository=Depends(UserSubscriptionRepository),
+) -> list[ExpireUserSubscriptionData]:
     """Метод просмотра всех активных подписок пользователей, срок действия которых истекает завтра"""
-    subscriptions = (
+    user_subscriptions = (
         await user_subscription_repository.get_expiring_active_subscriptions_automatic()
     )
     logger.info("All subscriptions expiring tomorrow have been collected")
     return [
-        UserSubscriptionApiModel(subscription=sub.subscription.__dict__, **sub.__dict__)
-        for sub in subscriptions
+        ExpireUserSubscriptionData(user_id=user_subscription.user_id, subscription_id=user_subscription.subscription.id)
+        for user_subscription in user_subscriptions
     ]
+    # for s in user_subscriptions:
+    #     print(s.__dict__)
+    # return [s.__dict__ for s in user_subscriptions]
+    # return [
+    #     UsersSubscription(subscription=sub.subscription, **sub)
+    #     for sub in user_subscriptions
+    # ]
+    # return [
+    #   sub.__dict__ for sub in user_subscriptions
+    # ]
 
 
 @router.get("/orders/processing", response_model=list[OrderApiModel])
 async def processing_orders(
-    order_repository=Depends(OrderRepository),
+        order_repository=Depends(OrderRepository),
 ) -> list[OrderApiModel]:
     """Метод просмотра заказов в обработке"""
     orders = await order_repository.get_processing_orders()
@@ -44,10 +56,10 @@ async def processing_orders(
 
 @router.get("/order/{order_external_id:str}/check")
 async def check_order_payment(
-    order_external_id: str,
-    stripe_client=Depends(get_stripe),
-    order_repository=Depends(OrderRepository),
-    user_subscription_repository=Depends(UserSubscriptionRepository),
+        order_external_id: str,
+        stripe_client=Depends(get_stripe),
+        order_repository=Depends(OrderRepository),
+        user_subscription_repository=Depends(UserSubscriptionRepository),
 ) -> None:
     """Метод проверки оплаты заказа"""
     # TODO тут ошибка если придёт возватный внешний идентификатор
@@ -78,7 +90,7 @@ async def check_order_payment(
 
 @router.get("/refunds/processing", response_model=list[OrderApiModel])
 async def processing_refunds(
-    order_repository=Depends(OrderRepository),
+        order_repository=Depends(OrderRepository),
 ):
     """Метод просмотра возвратов в обработке"""
     refunds_orders = await order_repository.get_processing_refunds()
@@ -93,11 +105,11 @@ async def processing_refunds(
 
 @router.get("/refund/{refund_external_id:str}/check")
 async def check_refund_order(
-    refund_external_id: str,
-    stripe_client=Depends(get_stripe),
-    order_repository=Depends(OrderRepository),
-    user_subscription_repository=Depends(UserSubscriptionRepository),
-):
+        refund_external_id: str,
+        stripe_client=Depends(get_stripe),
+        order_repository=Depends(OrderRepository),
+        user_subscription_repository=Depends(UserSubscriptionRepository),
+) -> None:
     """Метод проверяет прошёл ли возврат"""
     refund = await stripe_client.get_refund_data(refund_order_id=refund_external_id)
     if refund.status == "succeeded":
@@ -120,7 +132,7 @@ async def check_refund_order(
 
 @router.get("/subscriptions/expired/disable")
 async def disabling_expired_subscriptions(
-    user_subscription_repository=Depends(UserSubscriptionRepository),
+        user_subscription_repository=Depends(UserSubscriptionRepository),
 ) -> None:
     """Метод отключает истёкшие подписки"""
     await user_subscription_repository.update_expired_user_subscription()
@@ -128,5 +140,6 @@ async def disabling_expired_subscriptions(
 
 async def recurring_payment():
     """Тут будет метод по списанию рекурентных платежей"""
+
     # TODO а вот тут подошли к самому главному, мне полюбому нужно хранить payment_method
     pass

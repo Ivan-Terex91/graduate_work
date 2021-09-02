@@ -33,7 +33,8 @@ class SchedulerService:
             method=method,
             url=f"{self.billing_api_url}{self.base_endpoint}{endpoint}",
             headers=headers,
-            data=data,
+            # data=data,
+            json=data
         )
         return response.json()
 
@@ -66,7 +67,7 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"Error when trying to check processing refunds: {e}")
 
-    def check_refund_execution(self, refund_external_id: str):
+    def check_refund_execution(self, refund_external_id: str) -> None:
         """Метод проверки выполнения возврата"""
         try:
             self._request(method="GET", endpoint=f"/refund/{refund_external_id}/check")
@@ -86,9 +87,24 @@ class SchedulerService:
         try:
             expiring_subscriptions = self._request(method="GET", endpoint="/subscriptions/automatic/active")
             logger.info(f"{len(expiring_subscriptions)} subscriptions expire tomorrow")
+            for user_subscription in expiring_subscriptions:
+                self.trying_recurring_payment(user_id=user_subscription.get("user_id"),
+                                              subscription_id=user_subscription.get("subscription_id"))
+                print(user_subscription)
             return expiring_subscriptions
         except Exception as e:
             logger.error(f"Error when trying to check for expiring subscriptions: {e}")
+
+    def trying_recurring_payment(self, user_id: str, subscription_id):
+        """Метод проведения рекурентного платежа"""
+        try:
+            a = self._request(method="POST", endpoint="/subscription/recurring_payment",
+                              data={"user_id": user_id, "subscription_id": subscription_id})
+            print(a)
+        except Exception as e:
+            logger.error(
+                f"Error when trying recurring payment for user {user_id} / subscription {subscription_id}: {e}"
+            )
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ from db.repositories.order import OrderRepository
 from db.repositories.subscription import SubscriptionRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
 from fastapi import APIRouter, Depends, HTTPException
-from models.api_models import PaymentDataIn
+from models.api_models import PaymentDataIn, UserSubscriptionApiModel, ExpireUserSubscriptionData
 from models.common_models import OrderStatus, SubscriptionState
 from starlette import status
 from tortoise.transactions import in_transaction
@@ -227,3 +227,28 @@ async def cancel_subscription(
         subscription_id=user_subscription.id, status=SubscriptionState.CANCELED
     )
     logger.info(f"Subscription {user_subscription.id} update status to canceled")
+
+
+@router.post("/subscription/recurring_payment")
+async def recurring_payment(
+        user_subscription_data: ExpireUserSubscriptionData,
+        user_subscription_repository=Depends(UserSubscriptionRepository),
+        order_repository=Depends(OrderRepository),
+):
+    """Тут будет метод по списанию рекурентных платежей"""  # TODO описание
+    print(user_subscription_data)
+    # user_subscription = user_subscription_repository.get_user_subscription(id=user_subscription_id)
+    user_order = await order_repository.get_order(user_id=user_subscription_data.user_id, status=OrderStatus.PAID,
+                                                  subscription__id=user_subscription_data.subscription_id)
+    print(user_order)
+    # TODO дальше новый метод на рекурентный заказ
+    # new_order = order_repository.create_order(
+    #     user_id=user_order.id,
+    #     user_email=user_order.email,
+    #     subscription=user_order.subscription,
+    #     payment_data: Payment,
+    #     payment_method: PaymentMethodDataOut
+    # )
+    # print(new_order)
+    # print(user_subscription)
+    # print(user_order)

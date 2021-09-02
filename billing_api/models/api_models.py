@@ -11,7 +11,7 @@ from pydantic import UUID4, BaseModel, Field
 
 class SubscriptionApiModel(BaseModel):
     """Подписка"""
-
+    # id: UUID4
     title: str
     description: str
     period: SubscriptionPeriod
@@ -23,7 +23,7 @@ class SubscriptionApiModel(BaseModel):
 
 class UserSubscriptionApiModel(BaseModel):
     """Подпиcка пользователя"""
-
+    # id: UUID4
     user_id: UUID4
     subscription: SubscriptionApiModel
     start_date: datetime.date
@@ -95,4 +95,9 @@ class PaymentDataIn(BaseModel):
 class RefundDataIn(BaseModel):
     """Входные данные для возврата денег за подписку"""
 
+    subscription_id: UUID4
+
+
+class ExpireUserSubscriptionData(BaseModel):
+    user_id: UUID4
     subscription_id: UUID4
