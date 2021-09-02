@@ -46,7 +46,8 @@ class UsersSubscriptionAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     """Заказы"""
 
-    list_display = ("id", "user_id", "subscription", "status", "total_cost", "currency")
+    list_display = ("id", "user_id", "subscription", "status", "total_cost", "currency", "refund")
     search_fields = ("user_id", "subscription")
-    list_filter = ("status",)
+    list_filter = ("status", "refund")
     readonly_fields = ("created", "modified")
+

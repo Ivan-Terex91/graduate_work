@@ -127,13 +127,17 @@ async def refund_subscription(
         )
 
     user_order = await order_repository.get_order(
-        user_id=auth_user.user_id, status=OrderStatus.PAID
+        user_id=auth_user.user_id,
+        status=OrderStatus.PAID,
+        subscription=user_subscription.subscription,  # TODO и подписка
     )
     if not user_order:
         logger.error(
-            f"Error when returning a subscription, user {auth_user.user_id} has no paid orders"
+            f"Error when returning a subscription, user {auth_user.user_id} has no actual paid orders"
         )
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User has no paid orders")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail="User has no actual paid orders"
+        )  # TODO вопросиски...
 
     refund_amount = get_refund_amount(
         end_date=user_subscription.end_date,

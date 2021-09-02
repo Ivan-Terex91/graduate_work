@@ -145,7 +145,7 @@ class UsersSubscription(TimeStampedModel):
         verbose_name_plural = _("Подписки клиентов")
         constraints = [
             models.UniqueConstraint(
-                fields=["user_id", "subscription", "start_date", "end_date"], name="user_subscription_unique"
+                fields=["user_id", "subscription", "start_date", "end_date", "status"], name="user_subscription_unique"
             )
         ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_userssubscription"'
@@ -252,6 +252,7 @@ class Order(TimeStampedModel):
         verbose_name = _("заказ")
         verbose_name_plural = _("заказы")
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_order"'
+        ordering = ("-created",)
 
     def __str__(self):
         return f"{self.id} - {self.user_id} - {self.total_cost} - {self.status}"

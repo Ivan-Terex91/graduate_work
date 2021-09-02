@@ -34,11 +34,11 @@ class UserSubscriptionRepository:
     async def get_expiring_active_subscriptions_automatic(
         self,
     ) -> list[UsersSubscription]:
-        """Метод возвращает активные 'автоматические' подписки, срок действия которых истекает сегодня"""
+        """Метод возвращает активные 'автоматические' подписки, срок действия которых истекает завтра"""
         return await self._get_user_subscriptions(
             status=SubscriptionState.ACTIVE,
             subscription__automatic=True,
-            end_date=date.today(),
+            end_date=date.today() + timedelta(days=1),
         )
 
     async def get_user_subscriptions_by_user_id(

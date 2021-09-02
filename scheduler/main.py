@@ -82,10 +82,10 @@ class SchedulerService:
             logger.error(f"Error when trying to disable expired user subscriptions : {e}")
 
     def check_expiring_active_subscriptions_automatic(self):
-        """Метод проверки всех активных подписок пользователей, срок действия которых истекает сегодня"""
+        """Метод проверки всех активных подписок пользователей, срок действия которых истекает завтра"""
         try:
             expiring_subscriptions = self._request(method="GET", endpoint="/subscriptions/automatic/active")
-            logger.info(f"{len(expiring_subscriptions)} subscriptions expire today")
+            logger.info(f"{len(expiring_subscriptions)} subscriptions expire tomorrow")
             return expiring_subscriptions
         except Exception as e:
             logger.error(f"Error when trying to check for expiring subscriptions: {e}")

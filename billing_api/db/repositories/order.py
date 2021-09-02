@@ -31,9 +31,13 @@ class OrderRepository:
         """Метод возвращает заказ по внешнему идентификатору заказа"""
         return await self._get_order(external_id=external_id)
 
-    async def get_order(self, user_id: UUID4, status: OrderStatus) -> Optional[Order]:
+    async def get_order(
+        self, user_id: UUID4, status: OrderStatus, **kwargs
+    ) -> Optional[Order]:
         """Метод возвращает заказ пользователя в обработке"""
-        return await self._get_order(user_id=user_id, status=status, refund=False)
+        return await self._get_order(
+            user_id=user_id, status=status, refund=False, **kwargs
+        )
 
     async def get_processing_orders(self) -> list[Order]:
         """Метод возваращает все заказы находящиеся в обработке"""

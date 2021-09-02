@@ -18,11 +18,11 @@ logger = logging.getLogger(__name__)
 async def expiring_active_subscriptions_automatic(
     user_subscription_repository=Depends(UserSubscriptionRepository),
 ) -> list[UserSubscriptionApiModel]:
-    """Метод просмотра всех активных подписок пользователей, срок действия которых истекает сегодня"""
+    """Метод просмотра всех активных подписок пользователей, срок действия которых истекает завтра"""
     subscriptions = (
         await user_subscription_repository.get_expiring_active_subscriptions_automatic()
     )
-    logger.info("All subscriptions expiring today have been collected")
+    logger.info("All subscriptions expiring tomorrow have been collected")
     return [
         UserSubscriptionApiModel(subscription=sub.subscription.__dict__, **sub.__dict__)
         for sub in subscriptions
@@ -72,7 +72,7 @@ async def check_order_payment(
             # else:
             await user_subscription_repository.create_user_subscriptions(order=order)
             logger.info(
-                f"Subscription {order.subscription.id} for the user{order.user_id} is activated"
+                f"Subscription {order.subscription.id} for the user {order.user_id} is activated"
             )
 
 

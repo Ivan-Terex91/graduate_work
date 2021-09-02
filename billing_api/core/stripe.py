@@ -129,7 +129,6 @@ class StripeClient:
         refund = await self._request(
             method="GET", endpoint=f"/refunds/{refund_order_id}"
         )
-        print(refund)
         return RefundInner(**refund)
 
 
