@@ -106,6 +106,15 @@ class SchedulerService:
                 f"Error when trying recurring payment for user {user_id} / subscription {subscription_id}: {e}"
             )
 
+    def enable_preactive_user_subscriptions(self):
+        """Метод активации предактивных подпискок"""
+        try:
+            self._request(method="GET", endpoint="/subscriptions/preactive/enable")
+            logger.info(f"Preactive subscriptions on {date.today()} are enable")
+        except Exception as e:
+            logger.error(f"Error when trying to enable preactive user subscriptions : {e}")
+
+
 
 if __name__ == '__main__':
     logger.info("Scheduler is starting")
@@ -115,6 +124,7 @@ if __name__ == '__main__':
     schedule.every(5).seconds.do(scheduler.check_processing_refunds)
     schedule.every(10).seconds.do(scheduler.check_expiring_active_subscriptions_automatic)
     schedule.every(10).seconds.do(scheduler.disable_expired_user_subscription)
+    schedule.every(10).seconds.do(scheduler.enable_preactive_user_subscriptions)
     logger.info("Scheduler is running")
     while True:
         schedule.run_pending()

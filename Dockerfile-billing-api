@@ -9,4 +9,5 @@ RUN pip install -r /billing_api/requirements/billing-api.txt --no-cache-dir
 
 COPY ./billing_api /billing_api
 
-CMD sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8008 --reload
+# CMD sleep 10 && uvicorn main:app --host 0.0.0.0 --port 8008 --reload
+CMD uvicorn main:app --host 0.0.0.0 --port 8008 --reload

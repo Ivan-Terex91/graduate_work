@@ -12,7 +12,7 @@ class UserSubscriptionRepository:
 
     @staticmethod
     async def get_user_subscription(
-        user_id: UUID4, status=list[SubscriptionState], **kwargs
+            user_id: UUID4, status=list[SubscriptionState], **kwargs
     ) -> Optional[UsersSubscription]:
         """Метод возвращает подписку пользователя"""
         return await UsersSubscription.get_or_none(
@@ -32,7 +32,7 @@ class UserSubscriptionRepository:
         )
 
     async def get_expiring_active_subscriptions_automatic(
-        self,
+            self,
     ) -> list[UsersSubscription]:
         """Метод возвращает активные 'автоматические' подписки, срок действия которых истекает завтра"""
         return await self._get_user_subscriptions(
@@ -42,19 +42,19 @@ class UserSubscriptionRepository:
         )
 
     async def get_user_subscriptions_by_user_id(
-        self, user_id: UUID4
+            self, user_id: UUID4
     ) -> list[UsersSubscription]:
         """Метод возвращает все подписки, которые есть и были у пользователя"""
         return await self._get_user_subscriptions(user_id=user_id)
 
     async def update_user_subscription_status_by_id(
-        self, subscription_id: UUID4, status: SubscriptionState
+            self, subscription_id: UUID4, status: SubscriptionState
     ) -> None:
         """Метод обновляет статус подписки пользователя"""
         await self._update_user_subscriptions(status=status, id=subscription_id)
 
     async def update_user_subscription_status_by_user_id_and_sub(
-        self, user_id: UUID4, subscription: Subscription, status: SubscriptionState
+            self, user_id: UUID4, subscription: Subscription, status: SubscriptionState
     ):
         """Метод обновления статуса подписки пользователя"""
         await self._update_user_subscriptions(
@@ -68,14 +68,23 @@ class UserSubscriptionRepository:
         )
 
     @staticmethod
-    async def create_user_subscriptions(order: Order) -> UsersSubscription:
+    async def update_preactive_user_subscription():
+        """Метод обновляет обновляет статус предактивным подпискам"""
+        await UsersSubscription.filter(status=SubscriptionState.PREACTIVE, start_date=date.today()).update(
+            status=SubscriptionState.ACTIVE, modified=timezone.now()
+        )
+
+    @staticmethod
+    async def create_user_subscriptions(order: Order, status: SubscriptionState,
+                                        start_date: Optional[date] = None,
+                                        end_date: Optional[date] = None) -> UsersSubscription:
         """Метод создания подписки пользователя"""
         return await UsersSubscription.create(
             user_id=order.user_id,
             subscription=order.subscription,
-            start_date=date.today(),
-            end_date=date.today() + timedelta(days=order.subscription.period),
-            status=SubscriptionState.ACTIVE,
+            start_date=date.today() if not start_date else start_date,
+            end_date=(date.today() + timedelta(days=order.subscription.period)) if not end_date else end_date,
+            status=status,
             created=timezone.now(),
             modified=timezone.now(),
         )

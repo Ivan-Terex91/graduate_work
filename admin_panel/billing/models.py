@@ -106,7 +106,7 @@ class SubscriptionState(models.TextChoices):
     """Модель статусов подписок"""
 
     CANCELED = "canceled", _("Отменена")
-    PAID = "paid", _("Оплачена")
+    PREACTIVE = "preactive", _("Предактивна")
     ACTIVE = "active", _("Активна")
     INACTIVE = "inactive", _("Неактивна")
 
@@ -226,6 +226,8 @@ class Order(TimeStampedModel):
     id = models.UUIDField(
         verbose_name=_("идентификатор"), primary_key=True, default=uuid4
     )
+    parent_id = models.UUIDField(verbose_name=_("родительский заказ"), blank=True, null=True)
+    customer_id = models.CharField(verbose_name=_("идентификатор покупателя"), max_length=50, blank=True, null=True)
     external_id = models.CharField(verbose_name=_("внешний идентификатор"), max_length=40, null=True,
                                    blank=True)
     user_id = models.UUIDField(

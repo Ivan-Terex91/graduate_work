@@ -76,6 +76,8 @@ class Order(AbstractModel):
     """Заказы"""
 
     external_id = fields.CharField(max_length=40, unique=True, null=True)
+    parent_id = fields.UUIDField(null=True)
+    customer_id = fields.CharField(max_length=50, null=True)
     user_id = fields.UUIDField(null=False)
     user_email = fields.CharField(max_length=50, null=False)
     subscription: fields.ForeignKeyRelation[Subscription] = fields.ForeignKeyField(

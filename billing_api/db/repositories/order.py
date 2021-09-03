@@ -14,7 +14,10 @@ class OrderRepository:
     @staticmethod
     async def _get_order(**kwargs) -> Optional[Order]:
         """Получить заказ"""
-        return await Order.get_or_none(**kwargs).prefetch_related("subscription", "payment_method")
+        # return await Order.get_or_none(**kwargs).prefetch_related("subscription", "payment_method")
+        return await Order.filter(**kwargs).order_by(
+                "-created",
+            ).prefetch_related("subscription", "payment_method").first()
 
     @staticmethod
     async def _get_orders(**kwargs) -> list[Order]:
@@ -32,12 +35,16 @@ class OrderRepository:
         return await self._get_order(external_id=external_id)
 
     async def get_order(
-        self, user_id: UUID4, status: OrderStatus, **kwargs
+            self, user_id: UUID4, status: OrderStatus, **kwargs
     ) -> Optional[Order]:
         """Метод возвращает заказ пользователя в обработке"""
         return await self._get_order(
             user_id=user_id, status=status, refund=False, **kwargs
         )
+
+    async def get_recurrent_order(self, order_parend_id: UUID4) -> Optional[Order]:
+        """Метод возвращет рекурентный заказ (заказ потомок)"""
+        return await self._get_order(parent_id=order_parend_id)
 
     async def get_processing_orders(self) -> list[Order]:
         """Метод возваращает все заказы находящиеся в обработке"""
@@ -52,11 +59,11 @@ class OrderRepository:
         return await self._get_orders(user_id=user_id)
 
     async def update_order_external_id(
-        self, order_id: UUID4, external_id: str, status: OrderStatus
+            self, order_id: UUID4, external_id: str, status: OrderStatus, **kwargs
     ) -> None:
         """Метод обновления внешнего идентификатора заказа"""
         await self._update_order(
-            order_id=order_id, external_id=external_id, status=status
+            order_id=order_id, external_id=external_id, status=status, **kwargs
         )
 
     async def update_order_status(self, order_id: UUID4, status: OrderStatus) -> None:
@@ -65,11 +72,11 @@ class OrderRepository:
 
     @staticmethod
     async def create_order(
-        user_id: UUID4,
-        user_email: str,
-        subscription: Subscription,
-        payment_data: PaymentDataIn,
-        payment_method: PaymentMethodDataOut
+            user_id: UUID4,
+            user_email: str,
+            subscription: Subscription,
+            payment_data: PaymentDataIn,
+            payment_method: PaymentMethodDataOut
     ) -> Order:
         """Метод создания заказа"""
         return await Order.create(
@@ -90,6 +97,7 @@ class OrderRepository:
         """Метод создания возврата заказа"""
         return await Order.create(
             user_id=order.user_id,
+            customer_id=order.customer_id,
             user_email=order.user_email,
             subscription=order.subscription,
             currency=order.currency,
@@ -97,6 +105,24 @@ class OrderRepository:
             total_cost=total_cost,
             payment_method=order.payment_method,
             refund=True,
+            created=timezone.now(),
+            modified=timezone.now(),
+        )
+
+    @staticmethod
+    async def create_recurrent_order(order: Order):
+        """Метод создания рекуррентного заказа"""
+        return await Order.create(
+            parent_id=order.id,
+            user_id=order.user_id,
+            customer_id=order.customer_id,
+            user_email=order.user_email,
+            subscription=order.subscription,
+            currency=order.currency,
+            discount=0,
+            total_cost=order.total_cost,
+            payment_method=order.payment_method,
+            refund=order.refund,
             created=timezone.now(),
             modified=timezone.now(),
         )

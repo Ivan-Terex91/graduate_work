@@ -82,7 +82,7 @@ async def check_order_payment(
             #         f"Subscription {order.subscription.id} for the user{order.user_id} is inactive"
             #     )
             # else:
-            await user_subscription_repository.create_user_subscriptions(order=order)
+            await user_subscription_repository.create_user_subscriptions(order=order, status=SubscriptionState.ACTIVE)
             logger.info(
                 f"Subscription {order.subscription.id} for the user {order.user_id} is activated"
             )
@@ -136,6 +136,14 @@ async def disabling_expired_subscriptions(
 ) -> None:
     """Метод отключает истёкшие подписки"""
     await user_subscription_repository.update_expired_user_subscription()
+
+
+@router.get("/subscriptions/preactive/enable")
+async def enable_preactive_subscriptions(
+        user_subscription_repository=Depends(UserSubscriptionRepository),
+) -> None:
+    """Метод включает предактивные подписки"""
+    await user_subscription_repository.update_preactive_user_subscription()
 
 
 async def recurring_payment():

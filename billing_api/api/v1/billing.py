@@ -1,4 +1,5 @@
 import logging
+from datetime import date, timedelta
 
 from core.auth import auth_current_user
 from core.helpers import get_amount, get_refund_amount
@@ -30,7 +31,7 @@ async def create_subscription_payment(
     user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id,
         status=[
-            SubscriptionState.PAID,
+            # SubscriptionState.PAID,
             SubscriptionState.ACTIVE,
             SubscriptionState.CANCELED,
         ],
@@ -85,7 +86,7 @@ async def create_subscription_payment(
         logger.info(f"Order {order.id} created for user {auth_user.user_id}")
 
         customer = await stripe_client.create_customer(
-            user_id=order.user_id, user_email=order.user_email
+            user_id=order.user_id, user_email=order.user_email, payment_method=payment_method.id
         )
 
         payment = await stripe_client.create_payment(
@@ -99,7 +100,7 @@ async def create_subscription_payment(
         logger.info(f"Payment {payment.id} created for user {auth_user.user_id}")
 
         await order_repository.update_order_external_id(
-            order_id=order.id, external_id=payment.id, status=OrderStatus.PROGRESS
+            order_id=order.id, external_id=payment.id, status=OrderStatus.PROGRESS, customer_id=customer.id
         )
         logger.info(
             f"Order {order.id} update status to progress and has external_id {payment.id}"
@@ -234,13 +235,42 @@ async def recurring_payment(
         user_subscription_data: ExpireUserSubscriptionData,
         user_subscription_repository=Depends(UserSubscriptionRepository),
         order_repository=Depends(OrderRepository),
+        stripe_client=Depends(get_stripe),
+
 ):
     """Тут будет метод по списанию рекурентных платежей"""  # TODO описание
     print(user_subscription_data)
     # user_subscription = user_subscription_repository.get_user_subscription(id=user_subscription_id)
     user_order = await order_repository.get_order(user_id=user_subscription_data.user_id, status=OrderStatus.PAID,
-                                                  subscription__id=user_subscription_data.subscription_id)
+                                                  subscription__id=user_subscription_data.subscription_id,
+                                                  parent_id=None)
     print(user_order)
+    child_order = await order_repository.get_recurrent_order(order_parend_id=user_order.id)
+    print(child_order)
+    if not child_order:
+        async with in_transaction():
+            child_order = await order_repository.create_recurrent_order(order=user_order)
+            print(child_order)
+            # customer = await stripe_client.create_customer(user_id=child_order.user_id,
+            #                                                user_email=child_order.user_email)
+            payment = await stripe_client.create_recurrent_payment(customer_id=child_order.user_id,
+                                                                   user_email=child_order.user_email,
+                                                                   amount=get_amount(child_order.total_cost),
+                                                                   currency=child_order.currency.value,
+                                                                   payment_method_id=child_order.payment_method.id)
+            if payment.status == "succeeded":
+                await order_repository.update_order_external_id(order_id=child_order.id, external_id=payment.id,
+                                                                status=OrderStatus.PAID)
+                user_subscription = await user_subscription_repository.create_user_subscriptions(
+                    order=child_order,
+                    status=SubscriptionState.PREACTIVE,
+                    start_date=date.today() + timedelta(days=1),
+                    end_date=date.today() + timedelta(days=1 + child_order.subscription.period))
+                print(user_subscription)
+                return
+
+            raise Exception("Не получилось оплатить")
+
     # TODO дальше новый метод на рекурентный заказ
     # new_order = order_repository.create_order(
     #     user_id=user_order.id,

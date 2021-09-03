@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import backoff
 import stripe
@@ -40,11 +41,12 @@ class StripeClient:
                 response = await resp.json()
                 return response
 
-    async def create_customer(self, user_id: UUID4, user_email: str) -> CustomerInner:
+    async def create_customer(self, user_id: UUID4, user_email: str, payment_method: Optional[str] = None) -> CustomerInner:
         """Создание покупателя(клиента)"""
         customer_data = {
             "id": str(user_id),
             "email": user_email,
+            "payment_method": payment_method
         }
 
         response = await self._request(
@@ -52,7 +54,9 @@ class StripeClient:
         )
         if "error" in response:
             if response["error"]["code"] == "resource_already_exists":
+                print(customer_data)
                 return CustomerInner(**customer_data)
+        print(customer_data)
         return CustomerInner(**response)
 
     async def create_payment(
@@ -85,7 +89,7 @@ class StripeClient:
             amount: float,
             currency: str,
             user_email: str,
-            payment_method,
+            payment_method_id: str,
     ):
         """Создание рекурентного платежа"""
         # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
@@ -95,11 +99,16 @@ class StripeClient:
             "amount": amount,
             "currency": currency,
             "receipt_email": user_email,
-            "payment_method": "pm_card_visa",
+            "payment_method": payment_method_id,
+            "confirm": True,
+            "off_session": True
         }  # TODO payment_method
-        return await self._request(
+        payment = await self._request(
             method="POST", endpoint="/payment_intents", data=payment_intent_data
         )
+        print(payment)
+        print("MEM" * 10)
+        return PaymentInner(**payment)
 
     async def confirm_payment(self, payment_id: str, payment_method: str):
         """Подтверждение платёжа"""

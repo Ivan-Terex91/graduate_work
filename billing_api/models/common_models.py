@@ -33,7 +33,7 @@ class SubscriptionState(Enum):
     """Статусы подписок"""
 
     CANCELED = "canceled"
-    PAID = "paid"  # TODO а зачем тут этот статус??!! Олачен заказ может быть, но не сущность подписки
+    PREACTIVE = "preactive"
     ACTIVE = "active"
     INACTIVE = "inactive"
 
