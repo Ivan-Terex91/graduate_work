@@ -19,8 +19,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
 
     list_display = ("id", "title", "period", "type", "price", "currency")
     search_fields = ("title", "period", "type")
-    list_filter = ("period", "type")
+    list_filter = ("period", "type", "automatic")
     inlines = [SubscriptionMovieInLine]
+    readonly_fields = ("created", "modified")
 
 
 @admin.register(UsersSubscription)
@@ -29,20 +30,32 @@ class UsersSubscriptionAdmin(admin.ModelAdmin):
 
     list_display = ("id", "user_id", "subscription", "status")
     search_fields = ("user_id", "subscription", "status")
+    readonly_fields = ("created", "modified")
 
 
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
-    """Способы оплаты"""
+    """Методы оплаты"""
 
-    list_display = ("id", "payment_system", "type")
-    list_filter = ("payment_system", "type")
+    list_display = ("id", "user_id", "type")
+    readonly_fields = ("id",)
+    search_fields = ("user_id",)
+    list_filter = ("type",)
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     """Заказы"""
 
-    list_display = ("id", "user_id", "subscription", "status", "total_cost", "currency")
+    list_display = (
+        "id",
+        "user_id",
+        "subscription",
+        "status",
+        "total_cost",
+        "currency",
+        "refund",
+    )
     search_fields = ("user_id", "subscription")
-    list_filter = ("status",)
+    list_filter = ("status", "refund")
+    readonly_fields = ("created", "modified")

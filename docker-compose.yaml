@@ -22,7 +22,7 @@ services:
       - ./.env
     depends_on:
       - db
-    restart: always
+    restart: on-failure
 
   sqlite-to-postgres:
     build:
@@ -33,7 +33,32 @@ services:
     depends_on:
       - db
       - admin-panel
+    restart: on-failure
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile-billing-api
+    volumes:
+      - ./billing_api:/billing_api
+    env_file:
+      - ./.env
+    ports:
+      - "8008:8008"
+    depends_on:
+      - db
+      - admin-panel
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile-scheduler
+    depends_on:
+      - db
+      - api
+    env_file:
+      - ./.env
+    restart: always
 
   nginx:
     image: nginx:alpine
@@ -47,7 +72,28 @@ services:
       - admin-panel
     restart: always
 
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile-auth
+    volumes:
+      - ./auth:/auth
+    env_file:
+      - ./.env
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+      - redis
+
+
+  redis:
+    image: redis
+    volumes:
+      - redis_data:/data
+
 
 volumes:
   pg_data:
   admin_static_volume:
+  redis_data:

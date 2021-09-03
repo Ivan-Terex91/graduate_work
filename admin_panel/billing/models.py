@@ -9,9 +9,10 @@ from model_utils.models import TimeStampedModel
 class SubscriptionPeriod(models.IntegerChoices):
     """Периоды подписки"""
 
-    THIRTY_DAYS = 30, _("30")
-    NINETY_DAYS = 90, _("90")
-    ONE_HUNDRED_AND_EIGHTY_DAYS = 180, _("180")
+    WEEK = 7, _("7")
+    MONTH = 30, _("30")
+    SIX_MONTH = 180, _("180")
+    YEAR = 365, _("365")
 
 
 class SubscriptionType(models.TextChoices):
@@ -36,7 +37,7 @@ class Subscription(TimeStampedModel):
         verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
     )
     title = models.CharField(
-        verbose_name=_("название"), max_length=255, null=False, blank=False
+        verbose_name=_("название"), unique=True, max_length=255, null=False, blank=False
     )
     description = models.TextField(verbose_name=_("описание"))
     period = models.PositiveIntegerField(
@@ -63,18 +64,22 @@ class Subscription(TimeStampedModel):
         blank=False,
     )
 
+    automatic = models.BooleanField(
+        verbose_name=_("автоматическая"), default=False, null=False, blank=False
+    )
+
     class Meta:
         verbose_name = _("подписка")
         verbose_name_plural = _("подписки")
         constraints = [
             models.UniqueConstraint(
-                fields=["title", "period", "type"], name="subscription_unique"
+                fields=["period", "type", "automatic"], name="subscription_unique"
             )
         ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_subscription"'
 
     def __str__(self):
-        return f"{self.title} - {self.type} - {self.period}"
+        return f"{self.title} - {self.type} - {self.period} - {self.automatic}"
 
 
 class SubscriptionMovie(TimeStampedModel):
@@ -102,9 +107,10 @@ class SubscriptionMovie(TimeStampedModel):
 class SubscriptionState(models.TextChoices):
     """Модель статусов подписок"""
 
-    paid = "paid", _("Оплачена")
-    active = "active", _("Активна")
-    inactive = "inactive", _("Неактивна")
+    CANCELED = "canceled", _("Отменена")
+    PREACTIVE = "preactive", _("Предактивна")
+    ACTIVE = "active", _("Активна")
+    INACTIVE = "inactive", _("Неактивна")
 
 
 class UsersSubscription(TimeStampedModel):
@@ -117,7 +123,7 @@ class UsersSubscription(TimeStampedModel):
         verbose_name=_("идентификатор клиента"), null=False, blank=False
     )
     subscription = models.ForeignKey(
-        verbose_name=_("подписка"), to="Subscription", on_delete=models.CASCADE
+        verbose_name=_("подписка"), to="Subscription", on_delete=models.RESTRICT
     )
 
     start_date = models.DateField(
@@ -131,6 +137,7 @@ class UsersSubscription(TimeStampedModel):
         verbose_name=_("статус"),
         max_length=20,
         choices=SubscriptionState.choices,
+        default=SubscriptionState.INACTIVE,
         null=False,
         blank=False,
     )
@@ -138,10 +145,18 @@ class UsersSubscription(TimeStampedModel):
     class Meta:
         verbose_name = _("подписка клиента")
         verbose_name_plural = _("Подписки клиентов")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user_id", "subscription", "start_date", "end_date", "status"],
+                name="user_subscription_unique",
+            )
+        ]
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_userssubscription"'
 
     def __str__(self):
-        return f"{self.user_id} - {self.subscription} - {self.status}"
+        return (
+            f"{self.user_id} - {self.subscription} - {self.start_date}:{self.end_date}"
+        )
 
 
 class PaymentSystem(models.TextChoices):
@@ -152,28 +167,36 @@ class PaymentSystem(models.TextChoices):
     CLOUDPAYMENTS = "cloudpayments"
 
 
-class PaymentMethod(TimeStampedModel):
-    """Способы оплаты"""
+class PaymentMethodType(models.TextChoices):
+    """Тип метода оплаты"""
 
-    id = models.UUIDField(
-        verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
+    CARD = "card", _("card")
+
+
+class PaymentMethod(TimeStampedModel):
+    """Модель методов оплаты"""
+
+    id = models.CharField(
+        verbose_name=_("идентификатор"), primary_key=True, editable=False, max_length=50
     )
-    payment_system = models.CharField(
-        verbose_name=_("платёжная система"),
-        max_length=20,
-        choices=PaymentSystem.choices,
-        default=PaymentSystem.STRIPE,
+    user_id = models.UUIDField(
+        verbose_name=_("идентификатор клиента"), null=False, blank=False
+    )
+    type = models.CharField(
+        verbose_name=_("тип"),
+        choices=PaymentMethodType.choices,
+        max_length=10,
+        default=PaymentMethodType.CARD,
         null=False,
         blank=False,
     )
-    type = models.CharField(verbose_name=_("тип"), max_length=50)
 
     def __str__(self):
-        return f"{self.payment_system} - {self.type}"
+        return f"{self.id} - {self.type}"
 
     class Meta:
-        verbose_name = _("cпособ оплаты")
-        verbose_name_plural = _("cпособы оплаты")
+        verbose_name = _("метод оплаты")
+        verbose_name_plural = _("методы оплаты")
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_paymentmethod"'
 
 
@@ -190,7 +213,16 @@ class Order(TimeStampedModel):
     """Заказы"""
 
     id = models.UUIDField(
-        verbose_name=_("идентификатор"), primary_key=True, default=uuid4, editable=False
+        verbose_name=_("идентификатор"), primary_key=True, default=uuid4
+    )
+    parent_id = models.UUIDField(
+        verbose_name=_("родительский заказ"), blank=True, null=True
+    )
+    customer_id = models.CharField(
+        verbose_name=_("идентификатор покупателя"), max_length=50, blank=True, null=True
+    )
+    external_id = models.CharField(
+        verbose_name=_("внешний идентификатор"), max_length=40, null=True, blank=True
     )
     user_id = models.UUIDField(
         verbose_name=_("идентификатор клиента"), null=False, blank=False
@@ -205,15 +237,22 @@ class Order(TimeStampedModel):
         verbose_name=_("статус заказа"),
         max_length=20,
         choices=OrderStatus.choices,
+        default=OrderStatus.CREATED,
         null=False,
         blank=False,
     )
     payment_method = models.ForeignKey(
-        verbose_name=_("способ оплаты"),
+        verbose_name=_("метод оплаты"),
         to="PaymentMethod",
         on_delete=models.RESTRICT,
         null=False,
         blank=False,
+    )
+    payment_system = models.CharField(
+        verbose_name=_("Платёжная система"),
+        max_length=20,
+        choices=PaymentSystem.choices,
+        default=PaymentSystem.STRIPE,
     )
     currency = models.CharField(
         verbose_name=_("валюта"),
@@ -222,7 +261,9 @@ class Order(TimeStampedModel):
         null=False,
         blank=False,
     )
-    discount = models.PositiveSmallIntegerField(verbose_name=_("скидка (%)"), default=0)
+    discount = models.PositiveSmallIntegerField(
+        verbose_name=_("скидка (%)"), default=0, null=False, blank=False
+    )
     total_cost = models.DecimalField(
         verbose_name=_("итоговая стоимость"),
         max_digits=10,
@@ -230,11 +271,13 @@ class Order(TimeStampedModel):
         null=False,
         blank=False,
     )
+    refund = models.BooleanField(verbose_name=_("возврат"), default=False)
 
     class Meta:
         verbose_name = _("заказ")
         verbose_name_plural = _("заказы")
         db_table = f'"{os.getenv("BILLING_SCHEMA")}"."billing_order"'
+        ordering = ("-created",)
 
     def __str__(self):
         return f"{self.id} - {self.user_id} - {self.total_cost} - {self.status}"

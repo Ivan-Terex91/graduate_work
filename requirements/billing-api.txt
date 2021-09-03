@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+orjson
+httpx
+tortoise-orm[asyncpg]==0.17.2
+pydantic
+aiohttp
+stripe
+backoff
