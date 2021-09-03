@@ -132,7 +132,7 @@ class SchedulerService:
 if __name__ == "__main__":
     logger.info("Scheduler is starting")
     scheduler = SchedulerService(billing_settings=settings)
-    # TODO выставь везде правильное время старта задач
+    # TODO выставь везде правильное время старта задач, пока для тестирования оставлю эти
     schedule.every(5).seconds.do(scheduler.check_processing_orders)
     schedule.every(5).seconds.do(scheduler.check_processing_refunds)
     schedule.every(10).seconds.do(

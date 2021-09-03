@@ -17,11 +17,10 @@ component "Notification Service" as notification #White
 Admin -up-> AdminService: формирование\lподписок,\l спец. предложений
 AdminService <-left-> db: сохранение и контроль
 db <-down-> API: CRUD\nоперации
-db <-left-> Scheduler : мониторинг\lподписок\lи заказов
-Scheduler <-down-> payment: мониторинг\lплатежей
+Scheduler -down-> API: мониторинг платежей\lчерез api
 auth <-down- [Billing Service] : изменение\lролей\lпользователя
 notification <-down- [Billing Service] : отправка\lсобытий
-Client -left-> API: оформление/отказ подписки,\nпокупка фильма
+Client -left-> API: оформление/возврат\l/отказ подписки
 payment <-up-> API: операции\lпо оплате
 
 @enduml
