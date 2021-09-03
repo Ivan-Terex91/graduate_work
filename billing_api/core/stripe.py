@@ -68,7 +68,6 @@ class StripeClient:
         payment_method_id: str,
     ) -> PaymentInner:
         """Создание платежа"""
-
         payment_intent_data = {
             "customer": customer_id,
             "amount": amount,
@@ -90,7 +89,6 @@ class StripeClient:
         payment_method_id: str,
     ) -> PaymentInner:
         """Создание рекурентного платежа"""
-
         payment_intent_data = {
             "customer": customer_id,
             "amount": amount,
@@ -107,7 +105,6 @@ class StripeClient:
 
     async def confirm_payment(self, payment_id: str, payment_method: str):
         """Подтверждение платёжа"""
-
         data = {"payment_method": payment_method}
         return await self._request(
             method="POST",
@@ -117,7 +114,6 @@ class StripeClient:
 
     async def get_payment_data(self, payment_intents_id: str) -> PaymentInner:
         """Получение данных о платеже"""
-
         payment = await self._request(
             method="GET", endpoint=f"/payment_intents/{payment_intents_id}"
         )
@@ -125,14 +121,12 @@ class StripeClient:
 
     async def create_refund(self, payment_intent_id: str, amount: int) -> RefundInner:
         """Создание возврата"""
-
         data = {"payment_intent": payment_intent_id, "amount": amount}
         refund = await self._request(method="POST", endpoint="/refunds", data=data)
         return RefundInner(**refund)
 
     async def get_refund_data(self, refund_order_id: str) -> RefundInner:
         """Получение данных о возврате"""
-
         refund = await self._request(
             method="GET", endpoint=f"/refunds/{refund_order_id}"
         )
@@ -142,7 +136,6 @@ class StripeClient:
         self, payment_method_data: PaymentMethodData
     ) -> PaymentMethodDataOut:
         """Создание платёжного метода"""
-
         data = {
             "type": payment_method_data.type.value,
             "card[number]": payment_method_data.card_number,

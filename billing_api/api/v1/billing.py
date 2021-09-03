@@ -28,7 +28,6 @@ async def create_subscription_payment(
     user_subscription_repository=Depends(UserSubscriptionRepository),
 ) -> None:
     """Метод оформления (оплаты) подписки"""
-
     user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id,
         status=[
