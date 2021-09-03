@@ -1,8 +1,7 @@
 from typing import Optional
 
-from pydantic import UUID4
-
 from models.db_models import Subscription
+from pydantic import UUID4
 
 
 class SubscriptionRepository:

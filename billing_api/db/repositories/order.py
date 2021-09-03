@@ -1,12 +1,11 @@
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import UUID4
-from tortoise import timezone
-
 from models.api_models import PaymentDataIn, PaymentMethodDataOut
 from models.common_models import OrderStatus
 from models.db_models import Order, Subscription
+from pydantic import UUID4
+from tortoise import timezone
 
 
 class OrderRepository:

@@ -1,7 +1,6 @@
-from pydantic import UUID4
-
 from models.api_models import PaymentMethodDataOut
 from models.db_models import PaymentMethod
+from pydantic import UUID4
 
 
 class PaymentMethodRepository:
