@@ -1,9 +1,9 @@
 from tortoise import fields, timezone
 from tortoise.models import Model
 
-from .common_models import (Currency, OrderStatus, PaymentSystem,
-                            SubscriptionPeriod, SubscriptionState,
-                            SubscriptionType, PaymentMethodType)
+from .common_models import (Currency, OrderStatus, PaymentMethodType,
+                            PaymentSystem, SubscriptionPeriod,
+                            SubscriptionState, SubscriptionType)
 
 
 class AbstractModel(Model):
@@ -57,10 +57,12 @@ class UsersSubscription(AbstractModel):
 
 class PaymentMethod(Model):
     """Модель методов оплаты"""
+
     id = fields.CharField(pk=True, max_length=50)
     user_id = fields.UUIDField(null=False)
-    type: PaymentMethodType = fields.CharEnumField(enum_type=PaymentMethodType,
-                                                   default=PaymentMethodType.CARD)
+    type: PaymentMethodType = fields.CharEnumField(
+        enum_type=PaymentMethodType, default=PaymentMethodType.CARD
+    )
 
     created = fields.DatetimeField(default=timezone.now())
     modified = fields.DatetimeField(default=timezone.now())
@@ -90,7 +92,6 @@ class Order(AbstractModel):
         "billing.PaymentMethod",
         on_delete=fields.RESTRICT,
     )
-    # TODO может просто отдельно payment_method должен быть!!!???
     payment_system: PaymentSystem = fields.CharEnumField(
         enum_type=PaymentSystem, default=PaymentSystem.STRIPE
     )

@@ -1,7 +1,13 @@
 def insert_user_roles(target, connection, **kw):
     """Добавление ролей при создании таблицы"""
     base_roles = (
-        "anonymous", "authenticated", "superuser", "subscriber_bronze", "subscriber_silver", "subscriber_gold")
+        "anonymous",
+        "authenticated",
+        "superuser",
+        "subscriber_bronze",
+        "subscriber_silver",
+        "subscriber_gold",
+    )
     roles = [{"title": role} for role in base_roles]
     connection.execute(target.insert(), *roles)
 
@@ -68,7 +74,12 @@ def insert_user_role_permissions(target, connection, **kw):
 
     perm_subscriber_bronze = (*perm_auth, "can_watch_movies", "quality_lower_HD")
     perm_subscriber_silver = (*perm_subscriber_bronze, "quality_HD")
-    perm_subscriber_gold = (*perm_subscriber_silver, "can_watch_movies", "quality_lower_HD", "quality_higher_HD")
+    perm_subscriber_gold = (
+        *perm_subscriber_silver,
+        "can_watch_movies",
+        "quality_lower_HD",
+        "quality_higher_HD",
+    )
 
     permissions_subscriber_bronze = [
         {"role_id": role[0], "permission_id": permission[0]}

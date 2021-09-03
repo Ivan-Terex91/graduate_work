@@ -2,16 +2,15 @@ import datetime
 from decimal import Decimal
 from typing import Optional
 
-from models.common_models import (Currency, OrderStatus, PaymentSystem,
-                                  SubscriptionPeriod, SubscriptionState,
-                                  SubscriptionType, PaymentMethodType)
-
+from models.common_models import (Currency, OrderStatus, PaymentMethodType,
+                                  PaymentSystem, SubscriptionPeriod,
+                                  SubscriptionState, SubscriptionType)
 from pydantic import UUID4, BaseModel, Field
 
 
 class SubscriptionApiModel(BaseModel):
     """Подписка"""
-    # id: UUID4
+
     title: str
     description: str
     period: SubscriptionPeriod
@@ -23,19 +22,12 @@ class SubscriptionApiModel(BaseModel):
 
 class UserSubscriptionApiModel(BaseModel):
     """Подпиcка пользователя"""
-    # id: UUID4
+
     user_id: UUID4
     subscription: SubscriptionApiModel
     start_date: datetime.date
     end_date: datetime.date
     status: SubscriptionState
-
-
-# class PaymentMethodApiModel(BaseModel):
-#     """Способы оплаты"""
-#
-#     payment_system: PaymentSystem
-#     type = str
 
 
 class OrderApiModel(BaseModel):
@@ -76,6 +68,7 @@ class PaymentMethodData(BaseModel):
 
 class PaymentMethodDataOut(BaseModel):
     """Модель платёжного метода из Stripe"""
+
     id: str
     type: PaymentMethodType
 
@@ -89,7 +82,6 @@ class PaymentDataIn(BaseModel):
     discount: int = Field(ge=0, le=99)
     total_cost: Decimal
     payment_method: PaymentMethodData
-    # TODO можно включить цену, валюту, но можно взять и через id это. Плюс открытый вопрос с payment method
 
 
 class RefundDataIn(BaseModel):

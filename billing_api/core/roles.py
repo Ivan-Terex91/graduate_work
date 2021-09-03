@@ -16,12 +16,18 @@ class RolesService:
             return await client.request(method=method, url=url, json=data)
 
     async def grant_role(self, user_id: UUID4, role_title: str) -> None:
-        await self._request(method="POST", url=self.roles_update_url,
-                            data={"user_id": str(user_id), "role_title": role_title})
+        await self._request(
+            method="POST",
+            url=self.roles_update_url,
+            data={"user_id": str(user_id), "role_title": role_title},
+        )
 
     async def revoke_role(self, user_id: UUID4, role_title: str) -> None:
-        await self._request(method="DELETE", url=self.roles_update_url,
-                            data={"user_id": str(user_id), "role_title": role_title})
+        await self._request(
+            method="DELETE",
+            url=self.roles_update_url,
+            data={"user_id": str(user_id), "role_title": role_title},
+        )
 
 
 roles_client: Optional[RolesService] = None

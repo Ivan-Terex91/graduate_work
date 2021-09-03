@@ -37,6 +37,6 @@ async def user_orders(
     orders = await order_repository.get_user_orders(user_id=auth_user.user_id)
     logger.info(f"All orders of the user {auth_user.user_id} are collected")
     return [
-        OrderApiModel(subscription=order.subscription.__dict__,  **order.__dict__)
+        OrderApiModel(subscription=order.subscription.__dict__, **order.__dict__)
         for order in orders
     ]

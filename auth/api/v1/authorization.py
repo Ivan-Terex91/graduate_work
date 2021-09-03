@@ -40,13 +40,10 @@ class GetUserRoles(Resource):
 
 
 @ns.route("/user_role/")
-# @ns.doc(security="api_key")
 @ns.response(401, description="Unauthorized")
 @ns.response(403, description="Forbidden, you don't have permission to access")
 @ns.response(404, description="User not found")
 class ChangeUserRole(Resource):
-    # @login_required
-    # @is_superuser
     @ns.expect(RoleModel, validate=True)
     @ns.response(201, description="Successfully add role to user")
     def post(self):
@@ -60,8 +57,6 @@ class ChangeUserRole(Resource):
         )
         return {"message": "Successfully add role to user"}, 201
 
-    # @login_required
-    # @is_superuser
     @ns.expect(RoleModel, validate=True)
     @ns.response(204, description="Successfully delete role from user")
     @ns.response(400, description="The user does not have this role")

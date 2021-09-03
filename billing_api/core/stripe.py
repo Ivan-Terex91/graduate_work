@@ -5,11 +5,11 @@ import backoff
 import stripe
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError
+from models.api_models import PaymentMethodData, PaymentMethodDataOut
 from models.common_models import CustomerInner, PaymentInner, RefundInner
 from pydantic import UUID4
 
 from .config import STRIPE_API_KEY, STRIPE_BASE_URL
-from models.api_models import PaymentMethodData, PaymentMethodDataOut
 
 logger = logging.getLogger(__name__)
 
@@ -29,24 +29,26 @@ class StripeClient:
         exception=ClientError, wait_gen=backoff.expo, max_time=30, logger=logger
     )
     async def _request(
-            self, method: str, endpoint: str, headers: dict = None, data: dict = None
+        self, method: str, endpoint: str, headers: dict = None, data: dict = None
     ):
         async with ClientSession(headers=self.auth_header) as session:
             async with session.request(
-                    method=method,
-                    url=f"{self.base_url}{endpoint}",
-                    headers=headers,
-                    data=data,
+                method=method,
+                url=f"{self.base_url}{endpoint}",
+                headers=headers,
+                data=data,
             ) as resp:
                 response = await resp.json()
                 return response
 
-    async def create_customer(self, user_id: UUID4, user_email: str, payment_method: Optional[str] = None) -> CustomerInner:
+    async def create_customer(
+        self, user_id: UUID4, user_email: str, payment_method: Optional[str] = None
+    ) -> CustomerInner:
         """Создание покупателя(клиента)"""
         customer_data = {
             "id": str(user_id),
             "email": user_email,
-            "payment_method": payment_method
+            "payment_method": payment_method,
         }
 
         response = await self._request(
@@ -54,46 +56,40 @@ class StripeClient:
         )
         if "error" in response:
             if response["error"]["code"] == "resource_already_exists":
-                print(customer_data)
                 return CustomerInner(**customer_data)
-        print(customer_data)
         return CustomerInner(**response)
 
     async def create_payment(
-            self,
-            customer_id: str,
-            amount: float,
-            currency: str,
-            user_email: str,
-            payment_method_id: str,
+        self,
+        customer_id: str,
+        amount: float,
+        currency: str,
+        user_email: str,
+        payment_method_id: str,
     ) -> PaymentInner:
         """Создание платежа"""
-        # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
-        #  скорее всего для реализации автоматичесих списаний
         payment_intent_data = {
             "customer": customer_id,
             "amount": amount,
             "currency": currency,
             "receipt_email": user_email,
-            # "payment_method": "pm_card_visa",  # TODO с этим нужно доразобраться!!!!
-            "payment_method": payment_method_id,  # TODO с этим нужно доразобраться!!!!
-        }  # TODO payment_method
+            "payment_method": payment_method_id,
+        }
         payment = await self._request(
             method="POST", endpoint="/payment_intents", data=payment_intent_data
         )
         return PaymentInner(**payment)
 
     async def create_recurrent_payment(
-            self,
-            customer_id: str,
-            amount: float,
-            currency: str,
-            user_email: str,
-            payment_method_id: str,
-    ):
+        self,
+        customer_id: str,
+        amount: float,
+        currency: str,
+        user_email: str,
+        payment_method_id: str,
+    ) -> PaymentInner:
         """Создание рекурентного платежа"""
-        # TODO setup_future_usage='off_session' или "off_session": True это параметр для внесессионных платежей,
-        #  скорее всего для реализации автоматичесих списаний
+
         payment_intent_data = {
             "customer": customer_id,
             "amount": amount,
@@ -101,19 +97,16 @@ class StripeClient:
             "receipt_email": user_email,
             "payment_method": payment_method_id,
             "confirm": True,
-            "off_session": True
-        }  # TODO payment_method
+            "off_session": True,
+        }
         payment = await self._request(
             method="POST", endpoint="/payment_intents", data=payment_intent_data
         )
-        print(payment)
-        print("MEM" * 10)
         return PaymentInner(**payment)
 
     async def confirm_payment(self, payment_id: str, payment_method: str):
         """Подтверждение платёжа"""
-        # TODO как я понял, это симуляция метода подтверждения от пользователя по client_secret
-        # data = {"payment_method": "pm_card_visa"}  # TODO данные карты и т.д.
+
         data = {"payment_method": payment_method}
         return await self._request(
             method="POST",
@@ -128,7 +121,7 @@ class StripeClient:
         )
         return PaymentInner(**payment)
 
-    async def create_refund(self, payment_intent_id: str, amount: int):
+    async def create_refund(self, payment_intent_id: str, amount: int) -> RefundInner:
         """Создание возврата"""
         data = {"payment_intent": payment_intent_id, "amount": amount}
         refund = await self._request(method="POST", endpoint="/refunds", data=data)
@@ -141,19 +134,22 @@ class StripeClient:
         )
         return RefundInner(**refund)
 
-    async def create_payment_method(self, payment_method_data: PaymentMethodData):
+    async def create_payment_method(
+        self, payment_method_data: PaymentMethodData
+    ) -> PaymentMethodDataOut:
         """Создание платёжного метода"""
 
-        data = {"type": payment_method_data.type.value,
-                "card[number]": payment_method_data.card_number,
-                "card[exp_month]": payment_method_data.card_exp_month,
-                "card[exp_year]": payment_method_data.card_exp_year,
-                "card[cvc]": payment_method_data.card_cvc
-                }
-        method = await self._request(method="POST", endpoint="/payment_methods", data=data)
+        data = {
+            "type": payment_method_data.type.value,
+            "card[number]": payment_method_data.card_number,
+            "card[exp_month]": payment_method_data.card_exp_month,
+            "card[exp_year]": payment_method_data.card_exp_year,
+            "card[cvc]": payment_method_data.card_cvc,
+        }
+        method = await self._request(
+            method="POST", endpoint="/payment_methods", data=data
+        )
         return PaymentMethodDataOut(id=method.get("id"), type=payment_method_data.type)
-
-
 
 
 async def get_stripe() -> StripeClient:
