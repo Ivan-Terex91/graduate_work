@@ -67,7 +67,7 @@ async def create_subscription_payment(
 
     stripe_payment_method = await stripe_client.create_payment_method(
         payment_method_data=payment_data.payment_method
-    )  # TODO сходить в страйп и создать метод
+    )
 
     payment_method = await PaymentMethodRepository.create_payment_method(
         payment_method_data=stripe_payment_method, user_id=auth_user.user_id
