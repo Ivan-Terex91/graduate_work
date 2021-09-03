@@ -1,9 +1,10 @@
 import logging
 
+from fastapi import APIRouter, Depends
+
 from core.auth import auth_current_user
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
-from fastapi import APIRouter, Depends
 from models.api_models import OrderApiModel, UserSubscriptionApiModel
 
 router = APIRouter()

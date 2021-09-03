@@ -1,14 +1,14 @@
 import logging
 
+from fastapi import APIRouter, Depends
+from tortoise.transactions import in_transaction
+
 from core.roles import get_roles_client
 from core.stripe import get_stripe
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
-from fastapi import APIRouter, Depends
-from models.api_models import (ExpireUserSubscriptionData, OrderApiModel,
-                               UserSubscriptionApiModel)
+from models.api_models import ExpireUserSubscriptionData, OrderApiModel
 from models.common_models import OrderStatus, SubscriptionState
-from tortoise.transactions import in_transaction
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

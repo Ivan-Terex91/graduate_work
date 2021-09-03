@@ -1,10 +1,11 @@
 from datetime import date, timedelta
 from typing import Optional
 
-from models.common_models import SubscriptionState
-from models.db_models import Order, Subscription, UsersSubscription
 from pydantic import UUID4
 from tortoise import timezone
+
+from models.common_models import SubscriptionState
+from models.db_models import Order, Subscription, UsersSubscription
 
 
 class UserSubscriptionRepository:

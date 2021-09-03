@@ -5,9 +5,10 @@ import backoff
 import stripe
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError
+from pydantic import UUID4
+
 from models.api_models import PaymentMethodData, PaymentMethodDataOut
 from models.common_models import CustomerInner, PaymentInner, RefundInner
-from pydantic import UUID4
 
 from .config import STRIPE_API_KEY, STRIPE_BASE_URL
 
