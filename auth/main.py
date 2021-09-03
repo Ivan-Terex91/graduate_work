@@ -1,5 +1,3 @@
-import time
-
 from api import api
 from api.staff.v1.auth import ns as staff_auth_ns
 from api.v1.auth import ns as auth_ns

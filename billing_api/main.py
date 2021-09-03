@@ -2,7 +2,7 @@ import logging
 
 import uvicorn as uvicorn
 from api.v1 import billing, scheduler, user
-from core import auth, config
+from core import auth, config, roles
 from core.logger import LOGGING
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
@@ -20,6 +20,7 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup():
     auth.auth_client = auth.AuthClient(base_url=config.AUTH_URL)
+    roles.roles_client = roles.RolesService(base_url=config.AUTH_URL)
     await Tortoise.init(config=config.TORTOISE_CONFIG)
     await Tortoise.generate_schemas(safe=True)
 

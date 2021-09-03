@@ -2,6 +2,7 @@ import logging
 from datetime import date, timedelta
 
 from core.auth import auth_current_user
+from core.roles import get_roles_client
 from core.helpers import get_amount, get_refund_amount
 from core.stripe import get_stripe
 from db.repositories.order import OrderRepository
@@ -28,6 +29,7 @@ async def create_subscription_payment(
         user_subscription_repository=Depends(UserSubscriptionRepository),
 ):
     """Метод оформления (оплаты) подписки"""
+
     user_subscription = await user_subscription_repository.get_user_subscription(
         user_id=auth_user.user_id,
         status=[
@@ -137,6 +139,7 @@ async def confirm_subscription_payment(
 async def refund_subscription(
         # refund_data: RefundDataIn,  # TODO теоритически подписка активная может быть только одна в нашем сервисе ??!!
         auth_user=Depends(auth_current_user),
+        roles_client=Depends(get_roles_client),
         stripe_client=Depends(get_stripe),
         order_repository=Depends(OrderRepository),
         user_subscription_repository=Depends(UserSubscriptionRepository),
@@ -195,13 +198,10 @@ async def refund_subscription(
             subscription_id=user_subscription.id, status=SubscriptionState.INACTIVE
         )
         logger.info(f"Subscription {user_subscription.id} update status to inactive")
+
+        await roles_client.revoke_role(user_id=refund_order.user_id,
+                                       role_title=f"subscriber_{refund_order.subscription.type.value}")
         # TODO затем это должен подхватить шедуллер и платёжка скажет что деньги вернулись или отправились то уведомить
-
-
-# @router.post("/create_automatic_subscription")
-# async def create_automatic_subscription(auth_user=Depends(auth_current_user), stripe_client=Depends(get_stripe)):
-#     """Метод оформления подписки с автомотической пролонгацией"""
-#     pass  # TODO этот метод не нужен тут наверное!!!!
 
 
 @router.post("/subscription/cancel")
@@ -214,7 +214,7 @@ async def cancel_subscription(
         user_id=auth_user.user_id,
         subscription__automatic=True,
         status=[SubscriptionState.ACTIVE],
-    )  # TODO и этот метод надо доработать - активная автоматическая
+    )
     if not user_subscription:
         logger.info(
             f"Error when canceling a subscription, user {auth_user.user_id} has no active automatic subscription"
@@ -238,7 +238,7 @@ async def recurring_payment(
         stripe_client=Depends(get_stripe),
 
 ):
-    """Тут будет метод по списанию рекурентных платежей"""  # TODO описание
+    """Метод по списанию рекурентных платежей"""  # TODO описание
     print(user_subscription_data)
     # user_subscription = user_subscription_repository.get_user_subscription(id=user_subscription_id)
     user_order = await order_repository.get_order(user_id=user_subscription_data.user_id, status=OrderStatus.PAID,
@@ -269,16 +269,5 @@ async def recurring_payment(
                 print(user_subscription)
                 return
 
-            raise Exception("Не получилось оплатить")
-
-    # TODO дальше новый метод на рекурентный заказ
-    # new_order = order_repository.create_order(
-    #     user_id=user_order.id,
-    #     user_email=user_order.email,
-    #     subscription=user_order.subscription,
-    #     payment_data: Payment,
-    #     payment_method: PaymentMethodDataOut
-    # )
-    # print(new_order)
-    # print(user_subscription)
-    # print(user_order)
+            raise Exception(
+                f"Error when trying recurrent payment for subscription {child_order.subscription}, user {child_order.id}")

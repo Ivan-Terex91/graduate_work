@@ -1,6 +1,7 @@
 def insert_user_roles(target, connection, **kw):
     """Добавление ролей при создании таблицы"""
-    base_roles = ("anonymous", "authenticated", "superuser", "subscriber")
+    base_roles = (
+        "anonymous", "authenticated", "superuser", "subscriber_bronze", "subscriber_silver", "subscriber_gold")
     roles = [{"title": role} for role in base_roles]
     connection.execute(target.insert(), *roles)
 
@@ -65,14 +66,32 @@ def insert_user_role_permissions(target, connection, **kw):
         if permission[1] in perm_auth
     ]
 
-    perm_subscriber = (*perm_auth, "can_watch_movies")
+    perm_subscriber_bronze = (*perm_auth, "can_watch_movies", "quality_lower_HD")
+    perm_subscriber_silver = (*perm_subscriber_bronze, "quality_HD")
+    perm_subscriber_gold = (*perm_subscriber_silver, "can_watch_movies", "quality_lower_HD", "quality_higher_HD")
 
-    permissions_subscriber = [
+    permissions_subscriber_bronze = [
         {"role_id": role[0], "permission_id": permission[0]}
         for role in roles
-        if role[1] == "subscriber"
+        if role[1] == "subscriber_bronze"
         for permission in permissions
-        if permission[1] in perm_subscriber
+        if permission[1] in perm_subscriber_bronze
+    ]
+
+    permissions_subscriber_silver = [
+        {"role_id": role[0], "permission_id": permission[0]}
+        for role in roles
+        if role[1] == "subscriber_silver"
+        for permission in permissions
+        if permission[1] in perm_subscriber_silver
+    ]
+
+    permissions_subscriber_gold = [
+        {"role_id": role[0], "permission_id": permission[0]}
+        for role in roles
+        if role[1] == "subscriber_gold"
+        for permission in permissions
+        if permission[1] in perm_subscriber_gold
     ]
 
     perm_superuser = (
@@ -100,6 +119,8 @@ def insert_user_role_permissions(target, connection, **kw):
         target.insert(),
         *permissions_anonymous,
         *permissions_auth,
-        *permissions_subscriber,
+        *permissions_subscriber_bronze,
+        *permissions_subscriber_silver,
+        *permissions_subscriber_gold,
         *permissions_superuser
     )

@@ -31,6 +31,14 @@ class UserSubscriptionRepository:
             status=status, modified=timezone.now()
         )
 
+    async def get_active_user_subscriptions(self):
+        """Метод возвращает активные подписки"""
+        return await self._get_user_subscriptions(status=SubscriptionState.ACTIVE)
+
+    async def get_inactive_user_subscriptions(self):
+        """Метод возвращает активные подписки"""
+        return await self._get_user_subscriptions(status=SubscriptionState.INACTIVE)
+
     async def get_expiring_active_subscriptions_automatic(
             self,
     ) -> list[UsersSubscription]:
