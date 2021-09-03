@@ -4,9 +4,9 @@ from datetime import date
 
 import backoff
 import schedule
-from requests import request
-from requests.exceptions import RequestException
-from settings import Settings
+from requests import request  # type: ignore
+from requests.exceptions import RequestException  # type: ignore
+from settings import Settings  # type: ignore
 
 settings = Settings()
 logger = logging.getLogger("scheduler")
