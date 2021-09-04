@@ -1,0 +1,103 @@
+version: "3.5"
+services:
+
+  db:
+    image: postgres:13-alpine
+    env_file:
+      ./.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ../db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  admin-panel:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile-admin-panel
+    ports:
+      - "8000:8000"
+    volumes:
+      - admin_static_volume:/admin_panel/config/staticfiles
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    restart: on-failure
+
+#  sqlite-to-postgres:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile-sqlite-to-postgres
+#    env_file:
+#      - ./.env
+#    depends_on:
+#      - db
+#      - admin-panel
+#    restart: on-failure
+
+  api:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile-billing-api
+    ports:
+      - "8008:8008"
+    volumes:
+      - ../../.././billing_api:/billing_api
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+#      - admin-panel
+
+  scheduler:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile-scheduler
+    depends_on:
+      - db
+      - api
+    env_file:
+      - ./.env
+    restart: always
+
+#  nginx:
+#    image: nginx:alpine
+#    volumes:
+#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+#      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+#      - admin_static_volume:/admin_panel/config/staticfiles
+#    ports:
+##      - "8000:8000"
+#      - "8008:8008"
+#    depends_on:
+##      - admin-panel
+#      - api
+#    restart: always
+
+  auth:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile-auth
+    volumes:
+      - ../../.././auth:/auth
+    env_file:
+      - ./.env
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+      - redis
+
+
+  redis:
+    image: redis
+    volumes:
+      - redis_data:/data
+
+
+volumes:
+  pg_data:
+  admin_static_volume:
+  redis_data:
