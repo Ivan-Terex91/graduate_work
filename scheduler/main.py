@@ -59,7 +59,7 @@ class SchedulerService:
             self._request(method="GET", endpoint=f"/order/{order_external_id}/check")
         except Exception as e:
             logger.exception(
-                f"Error when trying to check payment for order %s: %s",
+                "Error when trying to check payment for order %s: %s",
                 order_external_id,
                 e,
             )
@@ -85,7 +85,7 @@ class SchedulerService:
             self._request(method="GET", endpoint=f"/refund/{refund_external_id}/check")
         except Exception as e:
             logger.exception(
-                f"Error when trying to check refund execution %s: %s",
+                "Error when trying to check refund execution %s: %s",
                 refund_external_id,
                 e,
             )
