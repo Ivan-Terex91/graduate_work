@@ -1,5 +1,6 @@
-from api import api
 from flask_restx import fields
+
+from api import api
 
 ResponseGetUserRoles = api.model(
     "ResponseGetUserRoles", {"roles": fields.String(required=True)}

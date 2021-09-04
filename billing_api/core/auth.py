@@ -4,6 +4,7 @@ from typing import Optional
 import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
+
 from models.common_models import AuthUserInner
 
 logger = logging.getLogger(__name__)

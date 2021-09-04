@@ -1,5 +1,6 @@
 from authlib.integrations.flask_client import OAuth
 from authlib.oauth2.auth import OAuth2Token
+
 from core.api import get_current_user
 from core.enums import OAuthProvider
 from services import services

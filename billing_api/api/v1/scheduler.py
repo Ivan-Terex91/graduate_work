@@ -1,13 +1,14 @@
 import logging
 
+from fastapi import APIRouter, Depends
+from tortoise.transactions import in_transaction
+
 from core.roles import get_roles_client
 from core.stripe import get_stripe
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
-from fastapi import APIRouter, Depends
 from models.api_models import ExpireUserSubscriptionData, OrderApiModel
 from models.common_models import OrderStatus, SubscriptionState
-from tortoise.transactions import in_transaction
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -68,14 +69,18 @@ async def check_order_payment(
                 order=order, status=SubscriptionState.ACTIVE
             )
             logger.info(
-                "Subscription %s for the user %s is activated", order.subscription.id, order.user_id
+                "Subscription %s for the user %s is activated",
+                order.subscription.id,
+                order.user_id,
             )
             await roles_client.grant_role(
                 user_id=order.user_id,
                 role_title=f"subscriber_{order.subscription.type.value}",
             )
             logger.info(
-                "Roles subscriber_%s has grant to user %s", order.subscription.type.value, order.user_id
+                "Roles subscriber_%s has grant to user %s",
+                order.subscription.type.value,
+                order.user_id,
             )
 
 
@@ -108,25 +113,30 @@ async def check_refund_order(
         refund_order = await order_repository.get_order_by_external_id(
             external_id=refund.id
         )
-        await order_repository.update_order_status(
-            order_id=refund_order.id, status=OrderStatus.PAID
-        )
-        logger.info("Refund %s update status to paid", refund_order.id)
-        await user_subscription_repository.update_user_subscription_status_by_user_id_and_sub(
-            user_id=refund_order.user_id,
-            subscription=refund_order.subscription,
-            status=SubscriptionState.INACTIVE,
-        )
-        logger.info(
-            "Subscription %s for the user %s is inactive", refund_order.subscription.id, refund_order.user_id
-        )
-        await roles_client.revoke_role(
-            user_id=refund_order.user_id,
-            role_title=f"subscriber_{refund_order.subscription.type.value}",
-        )
-        logger.info(
-            "Roles subscriber_%s has revoke from user %s", refund_order.subscription.type.value, refund_order.user_id
-        )
+        async with in_transaction():
+            await order_repository.update_order_status(
+                order_id=refund_order.id, status=OrderStatus.PAID
+            )
+            logger.info("Refund %s update status to paid", refund_order.id)
+            await user_subscription_repository.update_user_subscription_status_by_user_id_and_sub(
+                user_id=refund_order.user_id,
+                subscription=refund_order.subscription,
+                status=SubscriptionState.INACTIVE,
+            )
+            logger.info(
+                "Subscription %s for the user %s is inactive",
+                refund_order.subscription.id,
+                refund_order.user_id,
+            )
+            await roles_client.revoke_role(
+                user_id=refund_order.user_id,
+                role_title=f"subscriber_{refund_order.subscription.type.value}",
+            )
+            logger.info(
+                "Roles subscriber_%s has revoke from user %s",
+                refund_order.subscription.type.value,
+                refund_order.user_id,
+            )
 
 
 @router.get("/subscriptions/expired/disable")
@@ -146,7 +156,9 @@ async def disabling_expired_subscriptions(
         )
 
         logger.info(
-            "Roles subscriber_%s has revoke from user %s", user_subscription.subscription.type.value, user_subscription.user_id
+            "Roles subscriber_%s has revoke from user %s",
+            user_subscription.subscription.type.value,
+            user_subscription.user_id,
         )
 
 
@@ -166,5 +178,7 @@ async def enable_preactive_subscriptions(
             role_title=f"subscriber_{user_subscription.subscription.type.value}",
         )
         logger.info(
-            "Roles subscriber_%s has grant to user %s", user_subscription.subscription.type.value, user_subscription.user_id
+            "Roles subscriber_%s has grant to user %s",
+            user_subscription.subscription.type.value,
+            user_subscription.user_id,
         )

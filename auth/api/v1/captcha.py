@@ -1,9 +1,10 @@
 from io import BytesIO
 
-from api.v1.models.captcha import CaptchaChallengeModel
-from core.api import Resource
 from flask.helpers import send_file
 from flask_restx import Namespace
+
+from api.v1.models.captcha import CaptchaChallengeModel
+from core.api import Resource
 
 ns = Namespace("Captcha Namespace")
 

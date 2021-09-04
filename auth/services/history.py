@@ -2,10 +2,11 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 import user_agents
+from sqlalchemy.orm import Session
+
 from core.db import History, User
 from core.enums import Action
 from core.exceptions import NotFound
-from sqlalchemy.orm import Session
 
 
 class UserHistoryService:

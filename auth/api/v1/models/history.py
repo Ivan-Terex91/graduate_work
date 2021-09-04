@@ -1,6 +1,7 @@
+from flask_restx import fields
+
 from api import api
 from core.enums import Action, DeviceType
-from flask_restx import fields
 
 History = api.model(
     "HistoryModel",

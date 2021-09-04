@@ -1,9 +1,10 @@
 from functools import wraps
 
-from core.db import session
-from core.exceptions import AuthError, AuthorizationError, BadRequestError
 from flask import g, request
 from flask_restx import Resource as RestResource
+
+from core.db import session
+from core.exceptions import AuthError, AuthorizationError, BadRequestError
 from services import services
 
 

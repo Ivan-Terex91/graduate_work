@@ -6,6 +6,7 @@ import backoff
 import schedule
 from requests import request  # type: ignore
 from requests.exceptions import RequestException  # type: ignore
+
 from settings import Settings  # type: ignore
 
 settings = Settings()
@@ -23,7 +24,7 @@ class SchedulerService:
         exception=RequestException, wait_gen=backoff.expo, max_time=30, logger=logger
     )
     def _request(
-            self, method: str, endpoint: str, headers: dict = None, data: dict = None
+        self, method: str, endpoint: str, headers: dict = None, data: dict = None
     ):
         response = request(
             method=method,
@@ -33,8 +34,11 @@ class SchedulerService:
         )
         if response.ok:
             return response.json()
-        logger.exception("Error when requesting the billing api status_code=%s,  reason - %s", response.status_code,
-                         response.reason)
+        logger.exception(
+            "Error when requesting the billing api status_code=%s,  reason - %s",
+            response.status_code,
+            response.reason,
+        )
 
     def check_processing_orders(self) -> None:
         """Метод проверки оплаты заказов в обработке"""
@@ -55,7 +59,9 @@ class SchedulerService:
             self._request(method="GET", endpoint=f"/order/{order_external_id}/check")
         except Exception as e:
             logger.exception(
-                f"Error when trying to check payment for order %s: %s", order_external_id, e
+                f"Error when trying to check payment for order %s: %s",
+                order_external_id,
+                e,
             )
 
     def check_processing_refunds(self) -> None:
@@ -79,7 +85,9 @@ class SchedulerService:
             self._request(method="GET", endpoint=f"/refund/{refund_external_id}/check")
         except Exception as e:
             logger.exception(
-                f"Error when trying to check refund execution %s: %s", refund_external_id, e
+                f"Error when trying to check refund execution %s: %s",
+                refund_external_id,
+                e,
             )
 
     def disable_expired_user_subscription(self) -> None:
@@ -106,7 +114,9 @@ class SchedulerService:
                 )
             return expiring_subscriptions
         except Exception as e:
-            logger.exception("Error when trying to check for expiring subscriptions: %s", e)
+            logger.exception(
+                "Error when trying to check for expiring subscriptions: %s", e
+            )
 
     def trying_recurring_payment(self, user_id: str, subscription_id) -> None:
         """Метод проведения рекурентного платежа"""
@@ -118,7 +128,10 @@ class SchedulerService:
             )
         except Exception as e:
             logger.exception(
-                "Error when trying recurring payment for user %s / subscription %s: %s", user_id, subscription_id, e
+                "Error when trying recurring payment for user %s / subscription %s: %s",
+                user_id,
+                subscription_id,
+                e,
             )
 
     def enable_preactive_user_subscriptions(self) -> None:

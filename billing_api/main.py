@@ -1,12 +1,13 @@
 import logging
 
 import uvicorn as uvicorn
-from api.v1 import billing, scheduler, user
-from core import auth, config, roles
-from core.logger import LOGGING
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from tortoise import Tortoise
+
+from api.v1 import billing, scheduler, user
+from core import auth, config, roles
+from core.logger import LOGGING
 
 app = FastAPI(
     title=config.PROJECT_NAME,

@@ -1,5 +1,6 @@
-from api import api
 from flask_restx import fields
+
+from api import api
 
 CheckTokenModel = api.model("CheckTokenModel", {"token": fields.String(required=True)})
 

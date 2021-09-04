@@ -3,10 +3,11 @@ from hashlib import sha256
 from io import BytesIO
 from uuid import UUID, uuid4
 
-from core.db import CaptchaChallenge
-from core.exceptions import BadRequestError, NotFound
 from multicolorcaptcha import CaptchaGenerator
 from sqlalchemy.orm import Session
+
+from core.db import CaptchaChallenge
+from core.exceptions import BadRequestError, NotFound
 
 
 class CaptchaChallengeExpired(BadRequestError):

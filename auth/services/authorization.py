@@ -1,7 +1,8 @@
 from uuid import UUID
 
-from core.db import Permission, Role, RolePermission, User, UserRole
 from sqlalchemy.orm import Session
+
+from core.db import Permission, Role, RolePermission, User, UserRole
 
 
 class AuthorizationService:

@@ -1,10 +1,11 @@
 from typing import Optional
 from uuid import UUID
 
-from core.db import User
-from core.exceptions import AuthError, EmailUsedError, NotFound
 from passlib.hash import pbkdf2_sha256
 from sqlalchemy.orm import Session
+
+from core.db import User
+from core.exceptions import AuthError, EmailUsedError, NotFound
 
 
 class UserService:

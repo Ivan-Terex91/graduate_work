@@ -1,13 +1,14 @@
 from datetime import datetime, timezone
 
+from flask import url_for
+from flask_restx import Namespace
+from passlib import pwd
+
 from api.v1.models.auth import LoginResponseModel
 from api.v1.models.oauth import OAuthAccountModel
 from core.api import Resource, get_current_user, login_required
 from core.enums import OAuthProvider
 from core.oauth import oauth
-from flask import url_for
-from flask_restx import Namespace
-from passlib import pwd
 
 authorizations = {
     "api_key": {

@@ -1,6 +1,7 @@
+from flask_restx import Namespace
+
 from api.staff.v1.models.auth import CheckTokenModel, CheckTokenResponseModel
 from core.api import Resource
-from flask_restx import Namespace
 
 ns = Namespace("Staff Auth Namespace")
 

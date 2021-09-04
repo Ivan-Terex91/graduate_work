@@ -1,8 +1,9 @@
 from uuid import UUID
 
+from flask_restx import Namespace
+
 from api.v1.models.authorization import ResponseGetUserRoles, RoleModel
 from core.api import Resource, is_superuser, login_required
-from flask_restx import Namespace
 
 authorizations = {
     "api_key": {

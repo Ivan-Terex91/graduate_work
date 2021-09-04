@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
+from flask_restx import Api
+
 from core.exceptions import (AuthError, AuthorizationError, BadRequestError,
                              EmailUsedError, NotFound)
-from flask_restx import Api
 
 api = Api(title="Auth")
 
