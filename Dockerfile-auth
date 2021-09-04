@@ -4,7 +4,7 @@ WORKDIR /auth
 
 RUN apt-get update && apt-get --yes upgrade
 
-COPY ./requirements /auth/requirements
+COPY ./requirements/auth.txt /auth/requirements/
 RUN pip install -r /auth/requirements/auth.txt --no-cache-dir
 
 COPY ./auth /auth

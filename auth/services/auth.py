@@ -6,6 +6,7 @@ from typing import List, Optional, Tuple
 from uuid import UUID
 
 import jwt
+
 from core.db import OAuthAccount, RefreshToken
 from core.enums import OAuthProvider
 from core.exceptions import AuthError, NotFound

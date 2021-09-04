@@ -1,9 +1,10 @@
 import logging
 
+from fastapi import APIRouter, Depends
+
 from core.auth import auth_current_user
 from db.repositories.order import OrderRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
-from fastapi import APIRouter, Depends
 from models.api_models import OrderApiModel, UserSubscriptionApiModel
 
 router = APIRouter()
@@ -21,7 +22,7 @@ async def user_subscriptions(
             user_id=auth_user.user_id
         )
     )
-    logger.info(f"All subscriptions of the user {auth_user.user_id} are collected")
+    logger.info("All subscriptions of the user %s are collected", auth_user.user_id)
 
     return [
         UserSubscriptionApiModel(subscription=sub.subscription.__dict__, **sub.__dict__)
@@ -35,7 +36,7 @@ async def user_orders(
 ) -> list[OrderApiModel]:
     """Метод просмотра всех заказов пользователя"""
     orders = await order_repository.get_user_orders(user_id=auth_user.user_id)
-    logger.info(f"All orders of the user {auth_user.user_id} are collected")
+    logger.info("All orders of the user %s are collected", auth_user.user_id)
     return [
         OrderApiModel(subscription=order.subscription.__dict__, **order.__dict__)
         for order in orders

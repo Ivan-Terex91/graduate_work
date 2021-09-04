@@ -1,10 +1,11 @@
+from flask import g, request
+from flask_restx import Namespace
+
 from api.v1.models.auth import (LoginResponseModel, RefreshTokenModel,
                                 RefreshTokensResponseModel,
                                 SignupResponseModel)
 from api.v1.models.users import LoginRequestModel
 from core.api import Resource, captcha_challenge, login_required
-from flask import g, request
-from flask_restx import Namespace
 
 authorizations = {
     "api_key": {

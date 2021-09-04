@@ -7,7 +7,8 @@ RUN apk update \
 
 
 RUN pip install --upgrade pip
-COPY ./requirements /admin_panel/requirements
+COPY ./requirements/admin-panel.txt /admin_panel/requirements/
+
 RUN pip install -r /admin_panel/requirements/admin-panel.txt --no-cache-dir
 
 COPY ./admin_panel /admin_panel

@@ -1,6 +1,10 @@
 import logging
 from datetime import date, timedelta
 
+from fastapi import APIRouter, Depends, HTTPException
+from starlette import status
+from tortoise.transactions import in_transaction
+
 from core.auth import auth_current_user
 from core.helpers import get_amount, get_refund_amount
 from core.roles import get_roles_client
@@ -9,11 +13,8 @@ from db.repositories.order import OrderRepository
 from db.repositories.payment_method import PaymentMethodRepository
 from db.repositories.subscription import SubscriptionRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
-from fastapi import APIRouter, Depends, HTTPException
 from models.api_models import ExpireUserSubscriptionData, PaymentDataIn
 from models.common_models import OrderStatus, SubscriptionState
-from starlette import status
-from tortoise.transactions import in_transaction
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -37,7 +38,8 @@ async def create_subscription_payment(
     )
     if user_subscription:
         logger.error(
-            f"Error when paying for a subscription, user {auth_user.user_id} has active/not expired or paid subscription"
+            "Error when paying for a subscription, %s has active/not expired or paid subscription",
+            auth_user.user_id,
         )
         raise HTTPException(status.HTTP_409_CONFLICT, detail="User has subscriptions")
 
@@ -46,7 +48,8 @@ async def create_subscription_payment(
     )
     if user_order:
         logger.error(
-            f"Error when paying for a subscription, user {auth_user.user_id} has order in progress"
+            "Error when paying for a subscription, user %s has order in progress",
+            auth_user.user_id,
         )
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail="User has order in progress"
@@ -57,7 +60,8 @@ async def create_subscription_payment(
     )
     if not subscription:
         logger.error(
-            f"Error when paying for a subscription, subscription with id-{payment_data.subscription_id} does not exist"
+            "Error when paying for a subscription, subscription with id-%s does not exist",
+            payment_data.subscription_id,
         )
         raise HTTPException(
             status.HTTP_404_NOT_FOUND, detail="Subscription does not exist"
@@ -67,11 +71,11 @@ async def create_subscription_payment(
         payment_method_data=payment_data.payment_method
     )
 
-    payment_method = await PaymentMethodRepository.create_payment_method(
-        payment_method_data=stripe_payment_method, user_id=auth_user.user_id
-    )
-
     async with in_transaction():
+        payment_method = await PaymentMethodRepository.create_payment_method(
+            payment_method_data=stripe_payment_method, user_id=auth_user.user_id
+        )
+
         order = await order_repository.create_order(
             user_id=auth_user.user_id,
             user_email=auth_user.user_email,
@@ -79,7 +83,7 @@ async def create_subscription_payment(
             payment_data=payment_data,
             payment_method=payment_method,
         )
-        logger.info(f"Order {order.id} created for user {auth_user.user_id}")
+        logger.info("Order %s created for user %s", order.id, auth_user.user_id)
 
         customer = await stripe_client.create_customer(
             user_id=order.user_id,
@@ -95,7 +99,7 @@ async def create_subscription_payment(
             payment_method_id=order.payment_method.id,
         )
 
-        logger.info(f"Payment {payment.id} created for user {auth_user.user_id}")
+        logger.info("Payment %s created for user %s", payment.id, auth_user.user_id)
 
         await order_repository.update_order_external_id(
             order_id=order.id,
@@ -103,8 +107,11 @@ async def create_subscription_payment(
             status=OrderStatus.PROGRESS,
             customer_id=customer.id,
         )
+
         logger.info(
-            f"Order {order.id} update status to progress and has external_id {payment.id}"
+            "Order %s update status to progress and has external_id %s",
+            order.id,
+            payment.id,
         )
 
 
@@ -122,7 +129,8 @@ async def confirm_subscription_payment(
     )
     if not user_order:
         logger.error(
-            f"Error when confirm payment a subscription, user {auth_user.user_id} has no processing orders"
+            "Error when confirm payment a subscription, user % has no processing orders",
+            auth_user.user_id,
         )
         raise HTTPException(
             status.HTTP_404_NOT_FOUND, detail="User has no processing orders"
@@ -148,7 +156,8 @@ async def refund_subscription(
     )
     if not user_subscription:
         logger.error(
-            f"Error when refunding a subscription, user {auth_user.user_id} has no active subscription"
+            "Error when refunding a subscription, user %s has no active subscription",
+            auth_user.user_id,
         )
         raise HTTPException(
             status.HTTP_404_NOT_FOUND, detail="User has no active subscription"
@@ -161,7 +170,8 @@ async def refund_subscription(
     )
     if not user_order:
         logger.error(
-            f"Error when returning a subscription, user {auth_user.user_id} has no actual paid orders"
+            "Error when returning a subscription, user %s has no actual paid orders",
+            auth_user.user_id,
         )
         raise HTTPException(
             status.HTTP_404_NOT_FOUND, detail="User has no actual paid orders"
@@ -178,7 +188,7 @@ async def refund_subscription(
             order=user_order, total_cost=refund_amount
         )
         logger.info(
-            f"Refund order {refund_order.id} created for user {auth_user.user_id}"
+            "Refund order %s created for user %s", refund_order.id, auth_user.user_id
         )
         refund = await stripe_client.create_refund(
             payment_intent_id=user_order.external_id, amount=get_amount(refund_amount)
@@ -188,20 +198,24 @@ async def refund_subscription(
             order_id=refund_order.id, external_id=refund.id, status=OrderStatus.PROGRESS
         )
         logger.info(
-            f"Refund order {refund_order.id} update status to progress and has external_id {refund.id}"
+            "Refund order %s update status to progress and has external_id %s",
+            refund_order.id,
+            refund.id,
         )
 
         await user_subscription_repository.update_user_subscription_status_by_id(
             subscription_id=user_subscription.id, status=SubscriptionState.INACTIVE
         )
-        logger.info(f"Subscription {user_subscription.id} update status to inactive")
+        logger.info("Subscription %s update status to inactive", user_subscription.id)
 
         await roles_client.revoke_role(
             user_id=refund_order.user_id,
             role_title=f"subscriber_{refund_order.subscription.type.value}",
         )
         logger.info(
-            f"Roles subscriber_{refund_order.subscription.type.value} has revoke from user {refund_order.user_id}"
+            "Roles subscriber_%s has revoke from user %s",
+            refund_order.subscription.type.value,
+            refund_order.user_id,
         )
 
 
@@ -218,7 +232,8 @@ async def cancel_subscription(
     )
     if not user_subscription:
         logger.info(
-            f"Error when canceling a subscription, user {auth_user.user_id} has no active automatic subscription"
+            "Error when canceling a subscription, user %s has no active automatic subscription",
+            auth_user.user_id,
         )
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -228,7 +243,7 @@ async def cancel_subscription(
     await user_subscription_repository.update_user_subscription_status_by_id(
         subscription_id=user_subscription.id, status=SubscriptionState.CANCELED
     )
-    logger.info(f"Subscription {user_subscription.id} update status to canceled")
+    logger.info("Subscription %s update status to canceled", user_subscription.id)
 
 
 @router.post("/subscription/recurring_payment")
@@ -278,5 +293,7 @@ async def recurring_payment(
                 return
 
             raise Exception(
-                f"Error when trying recurrent payment for subscription {child_order.subscription}, user {child_order.id}"
+                "Error when trying recurrent payment for subscription %s, user %s",
+                child_order.subscription,
+                child_order.id,
             )

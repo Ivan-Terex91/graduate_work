@@ -2,10 +2,11 @@ import datetime
 from decimal import Decimal
 from typing import Optional
 
+from pydantic import UUID4, BaseModel, Field
+
 from models.common_models import (Currency, OrderStatus, PaymentMethodType,
                                   PaymentSystem, SubscriptionPeriod,
                                   SubscriptionState, SubscriptionType)
-from pydantic import UUID4, BaseModel, Field
 
 
 class SubscriptionApiModel(BaseModel):

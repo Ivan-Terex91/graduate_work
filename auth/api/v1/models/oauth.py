@@ -1,6 +1,7 @@
+from flask_restx import fields
+
 from api import api
 from core.enums import OAuthProvider
-from flask_restx import fields
 
 OAuthAccountModel = api.model(
     "OAuthAccountModel",

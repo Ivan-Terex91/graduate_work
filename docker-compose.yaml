@@ -43,8 +43,6 @@ services:
       - ./billing_api:/billing_api
     env_file:
       - ./.env
-    ports:
-      - "8008:8008"
     depends_on:
       - db
       - admin-panel
@@ -67,9 +65,11 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - admin_static_volume:/admin_panel/config/staticfiles
     ports:
-      - "80:80"
+      - "8000:8000"
+      - "8008:8008"
     depends_on:
       - admin-panel
+      - api
     restart: always
 
   auth:

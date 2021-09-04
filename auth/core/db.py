@@ -1,14 +1,15 @@
 import uuid
 
-from core.enums import Action, DeviceType, OAuthProvider
-from core.insert_data import (insert_permissions, insert_user_role_permissions,
-                              insert_user_roles)
 from sqlalchemy import (Column, Date, DateTime, ForeignKey, LargeBinary,
                         PrimaryKeyConstraint, String, UniqueConstraint,
                         create_engine)
 from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship, scoped_session, sessionmaker
+
+from core.enums import Action, DeviceType, OAuthProvider
+from core.insert_data import (insert_permissions, insert_user_role_permissions,
+                              insert_user_roles)
 
 session = scoped_session(sessionmaker(autocommit=False, autoflush=False))
 
