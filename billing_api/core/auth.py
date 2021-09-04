@@ -42,7 +42,7 @@ async def auth_current_user(
     try:
         response = await auth_client.check_token(token)
     except httpx.HTTPError as exc:
-        logger.error(f"Auth request failed: {exc!r}")
+        logger.exception("Auth request failed: %s", exc)
         raise credentials_exception
 
     if response.status_code != status.HTTP_200_OK:

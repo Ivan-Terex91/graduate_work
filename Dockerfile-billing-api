@@ -4,7 +4,7 @@ WORKDIR /billing_api
 
 RUN apt-get update && apt-get --yes upgrade
 
-COPY ./requirements /billing_api/requirements
+COPY ./requirements/billing-api.txt /billing_api/requirements/
 RUN pip install -r /billing_api/requirements/billing-api.txt --no-cache-dir
 
 COPY ./billing_api /billing_api

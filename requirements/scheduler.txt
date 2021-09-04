@@ -1,4 +1,4 @@
-schedule
-pydantic
-requests
-backoff
+schedule==1.1.0
+pydantic==1.8.2
+requests==2.26.0
+backoff==1.11.1

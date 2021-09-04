@@ -57,25 +57,25 @@ async def check_order_payment(
     """Метод проверки оплаты заказа"""
     payment = await stripe_client.get_payment_data(payment_intents_id=order_external_id)
     if payment.status == "succeeded":
-        logger.info(f"The order with external_id {order_external_id} is paid")
+        logger.info("The order with external_id %s is paid", order_external_id)
         order = await order_repository.get_order_by_external_id(external_id=payment.id)
         async with in_transaction():
             await order_repository.update_order_status(
                 order_id=order.id, status=OrderStatus.PAID
             )
-            logger.info(f"Order {order.id} update status to paid")
+            logger.info("Order %s update status to paid", order.id)
             await user_subscription_repository.create_user_subscriptions(
                 order=order, status=SubscriptionState.ACTIVE
             )
             logger.info(
-                f"Subscription {order.subscription.id} for the user {order.user_id} is activated"
+                "Subscription %s for the user %s is activated", order.subscription.id, order.user_id
             )
             await roles_client.grant_role(
                 user_id=order.user_id,
                 role_title=f"subscriber_{order.subscription.type.value}",
             )
             logger.info(
-                f"Roles subscriber_{order.subscription.type.value} has grant to user {order.user_id}"
+                "Roles subscriber_%s has grant to user %s", order.subscription.type.value, order.user_id
             )
 
 
@@ -111,21 +111,21 @@ async def check_refund_order(
         await order_repository.update_order_status(
             order_id=refund_order.id, status=OrderStatus.PAID
         )
-        logger.info(f"Refund {refund_order.id} update status to paid")
+        logger.info("Refund %s update status to paid", refund_order.id)
         await user_subscription_repository.update_user_subscription_status_by_user_id_and_sub(
             user_id=refund_order.user_id,
             subscription=refund_order.subscription,
             status=SubscriptionState.INACTIVE,
         )
         logger.info(
-            f"Subscription {refund_order.subscription.id} for the user {refund_order.user_id} is inactive"
+            "Subscription %s for the user %s is inactive", refund_order.subscription.id, refund_order.user_id
         )
         await roles_client.revoke_role(
             user_id=refund_order.user_id,
             role_title=f"subscriber_{refund_order.subscription.type.value}",
         )
         logger.info(
-            f"Roles subscriber_{refund_order.subscription.type.value} has revoke from user {refund_order.user_id}"
+            "Roles subscriber_%s has revoke from user %s", refund_order.subscription.type.value, refund_order.user_id
         )
 
 
@@ -146,7 +146,7 @@ async def disabling_expired_subscriptions(
         )
 
         logger.info(
-            f"Roles subscriber_{user_subscription.subscription.type.value} has revoke from user {user_subscription.user_id}"
+            "Roles subscriber_%s has revoke from user %s", user_subscription.subscription.type.value, user_subscription.user_id
         )
 
 
@@ -166,5 +166,5 @@ async def enable_preactive_subscriptions(
             role_title=f"subscriber_{user_subscription.subscription.type.value}",
         )
         logger.info(
-            f"Roles subscriber_{user_subscription.subscription.type.value} has grant to user {user_subscription.user_id}"
+            "Roles subscriber_%s has grant to user %s", user_subscription.subscription.type.value, user_subscription.user_id
         )

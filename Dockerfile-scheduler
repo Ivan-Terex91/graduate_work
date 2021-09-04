@@ -3,7 +3,7 @@ WORKDIR /scheduler
 
 RUN apt-get update && apt-get --yes upgrade
 
-COPY ./requirements /scheduler/requirements
+COPY ./requirements/scheduler.txt /scheduler/requirements/
 RUN pip install -r /scheduler/requirements/scheduler.txt --no-cache-dir
 
 COPY ./scheduler /scheduler

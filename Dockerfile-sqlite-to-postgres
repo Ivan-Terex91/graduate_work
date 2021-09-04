@@ -7,7 +7,7 @@ RUN apk update \
 
 
 RUN pip install --upgrade pip
-COPY ./requirements /sqlite_to_postgres/requirements
+COPY ./requirements/sqlite-to-postgres.txt /sqlite_to_postgres/requirements/
 RUN pip install -r /sqlite_to_postgres/requirements/sqlite-to-postgres.txt --no-cache-dir
 
 COPY ./sqlite_to_postgres /sqlite_to_postgres
