@@ -11,7 +11,7 @@ Swagger - `http://127.0.0.1:8008/api/openapi`
 Swagger - `http://127.0.0.1:8001/`
 
 # Administration service
-`http://127.0.0.1/admin/`
+`http://127.0.0.1:8000/admin/`
 
 Ссылка на репозиторий https://github.com/Ivan-Terex91/graduate_work
 
