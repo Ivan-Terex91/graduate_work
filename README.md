@@ -25,4 +25,4 @@ P.S. Забыл на встрече показать и рассказать, е
 
 [Исправления по ревью](https://github.com/Ivan-Terex91/graduate_work/pull/15)
 
-[Начало функциональных тестов](https://github.com/Ivan-Terex91/graduate_work/pull/16)
+[Функциональные тесты](https://github.com/Ivan-Terex91/graduate_work/pull/16)
