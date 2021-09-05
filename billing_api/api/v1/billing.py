@@ -293,6 +293,5 @@ async def recurring_payment(
                 return
 
             raise Exception(
-                f"Error when trying recurrent payment for subscription {child_order.subscription}, "
-                f"user {child_order.id}"
+                f"Error when trying recurrent payment for subscription {child_order.subscription},user {child_order.id}"
             )
