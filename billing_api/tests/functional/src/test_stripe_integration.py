@@ -94,7 +94,6 @@ class TestStripe:
         self, test_stripe_client, test_payment_method_data, test_user_data
     ):
         """Тест метода создания возврата"""
-
         with mock.patch.object(test_stripe_client, "_request") as mock_request:
             mock_request.return_value = {
                 "id": "expected_id",
