@@ -37,6 +37,18 @@ async def test_user_data():
     yield user_data
 
 
+@pytest.fixture(scope="function")
+async def test_payment_data():
+    payment_data = {
+        "customer_id": "test_customer.id",
+        "amount": 1000,
+        "currency": "usd",
+        "user_email": "test_customer.email",
+        "payment_method_id": "test_payment_method.id",
+    }
+    yield payment_data
+
+
 @pytest.fixture(scope="session")
 async def test_stripe_client():
     yield StripeClient(url=TEST_STRIPE_BASE_URL, api_key=TEST_STRIPE_API_KEY)
