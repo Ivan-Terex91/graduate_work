@@ -1,8 +1,10 @@
 import logging
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends
 from tortoise.transactions import in_transaction
 
+from core.helpers import get_amount
 from core.roles import get_roles_client
 from core.stripe import get_stripe
 from db.repositories.order import OrderRepository
@@ -182,3 +184,54 @@ async def enable_preactive_subscriptions(
             user_subscription.subscription.type.value,
             user_subscription.user_id,
         )
+
+
+@router.post("/subscription/recurring_payment")
+async def recurring_payment(
+    user_subscription_data: ExpireUserSubscriptionData,
+    user_subscription_repository=Depends(UserSubscriptionRepository),
+    order_repository=Depends(OrderRepository),
+    stripe_client=Depends(get_stripe),
+) -> None:
+    """Метод по списанию рекурентных платежей"""
+    user_order = await order_repository.get_order(
+        user_id=user_subscription_data.user_id,
+        status=OrderStatus.PAID,
+        subscription__id=user_subscription_data.subscription_id,
+        parent_id=None,
+    )
+
+    child_order = await order_repository.get_recurrent_order(
+        order_parend_id=user_order.id
+    )
+    if not child_order:
+        async with in_transaction():
+            child_order = await order_repository.create_recurrent_order(
+                order=user_order
+            )
+            payment = await stripe_client.create_recurrent_payment(
+                customer_id=child_order.user_id,
+                user_email=child_order.user_email,
+                amount=get_amount(child_order.total_cost),
+                currency=child_order.currency.value,
+                payment_method_id=child_order.payment_method.id,
+            )
+            if payment.status == "succeeded":
+                await order_repository.update_order_external_id(
+                    order_id=child_order.id,
+                    external_id=payment.id,
+                    status=OrderStatus.PAID,
+                )
+                await user_subscription_repository.create_user_subscriptions(
+                    order=child_order,
+                    status=SubscriptionState.PREACTIVE,
+                    start_date=date.today() + timedelta(days=1),
+                    end_date=date.today()
+                    + timedelta(days=1 + child_order.subscription.period),
+                )
+
+                return
+
+            raise Exception(
+                f"Error when trying recurrent payment for subscription {child_order.subscription},user {child_order.id}"
+            )
