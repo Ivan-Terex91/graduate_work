@@ -1,9 +1,15 @@
 from tortoise import fields, timezone
 from tortoise.models import Model
 
-from .common_models import (Currency, OrderStatus, PaymentMethodType,
-                            PaymentSystem, SubscriptionPeriod,
-                            SubscriptionState, SubscriptionType)
+from .common_models import (
+    Currency,
+    OrderStatus,
+    PaymentMethodType,
+    PaymentSystem,
+    SubscriptionPeriod,
+    SubscriptionState,
+    SubscriptionType,
+)
 
 
 class AbstractModel(Model):

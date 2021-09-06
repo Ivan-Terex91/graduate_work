@@ -88,7 +88,10 @@ async def create_subscription_payment(
         customer = await stripe_client.create_customer(
             user_id=order.user_id,
             user_email=order.user_email,
-            payment_method=payment_method.id,
+        )
+
+        await stripe_client.attach_payment_method(
+            payment_method_id=payment_method.id, customer_id=customer.id
         )
 
         payment = await stripe_client.create_payment(

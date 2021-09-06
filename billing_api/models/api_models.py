@@ -4,9 +4,15 @@ from typing import Optional
 
 from pydantic import UUID4, BaseModel, Field
 
-from models.common_models import (Currency, OrderStatus, PaymentMethodType,
-                                  PaymentSystem, SubscriptionPeriod,
-                                  SubscriptionState, SubscriptionType)
+from models.common_models import (
+    Currency,
+    OrderStatus,
+    PaymentMethodType,
+    PaymentSystem,
+    SubscriptionPeriod,
+    SubscriptionState,
+    SubscriptionType,
+)
 
 
 class SubscriptionApiModel(BaseModel):
