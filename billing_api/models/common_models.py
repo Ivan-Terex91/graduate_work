@@ -81,7 +81,7 @@ class CustomerInner(BaseModel):
 
     id: str
     email: str
-    payment_method: str = None
+    payment_method: Optional[str] = None
 
 
 class RefundInner(PaymentInner):
