@@ -120,7 +120,6 @@ class StripeClient:
         """Создание возврата"""
         data = {"payment_intent": payment_intent_id, "amount": amount}
         refund = await self._request(method="POST", endpoint="/refunds", data=data)
-        print(refund)
         return RefundInner(**refund)
 
     async def get_refund_data(self, refund_order_id: str) -> RefundInner:
@@ -149,8 +148,8 @@ class StripeClient:
     async def attach_payment_method(
         self, payment_method_id: str, customer_id: str
     ) -> None:
-        data = {"customer": customer_id}
         """Прикрепление платёжного метода к покупателю(клиенту)"""
+        data = {"customer": customer_id}
         await self._request(
             method="POST",
             endpoint=f"/payment_methods/{payment_method_id}/attach",

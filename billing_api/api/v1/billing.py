@@ -12,7 +12,7 @@ from db.repositories.order import OrderRepository
 from db.repositories.payment_method import PaymentMethodRepository
 from db.repositories.subscription import SubscriptionRepository
 from db.repositories.user_subscription import UserSubscriptionRepository
-from models.api_models import ExpireUserSubscriptionData, PaymentDataIn
+from models.api_models import PaymentDataIn
 from models.common_models import OrderStatus, SubscriptionState
 
 router = APIRouter()
