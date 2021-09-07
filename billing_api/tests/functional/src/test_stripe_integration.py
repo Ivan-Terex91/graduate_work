@@ -32,7 +32,6 @@ class TestStripe:
             customer = await test_stripe_client.create_customer(
                 user_id=test_user_data["user_id"],
                 user_email=test_user_data["user_email"],
-                payment_method="test_payment_method.id",
             )
         assert customer.id == test_user_data["user_id"]
         assert customer.email == test_user_data["user_email"]

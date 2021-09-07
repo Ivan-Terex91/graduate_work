@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import backoff
 import stripe
@@ -42,14 +41,11 @@ class StripeClient:
                 response = await resp.json()
                 return response
 
-    async def create_customer(
-        self, user_id: UUID4, user_email: str, payment_method: Optional[str] = None
-    ) -> CustomerInner:
+    async def create_customer(self, user_id: UUID4, user_email: str) -> CustomerInner:
         """Создание покупателя(клиента)"""
         customer_data = {
             "id": str(user_id),
             "email": user_email,
-            "payment_method": payment_method,
         }
 
         response = await self._request(
@@ -148,6 +144,17 @@ class StripeClient:
             method="POST", endpoint="/payment_methods", data=data
         )
         return PaymentMethodDataOut(id=method.get("id"), type=payment_method_data.type)
+
+    async def attach_payment_method(
+        self, payment_method_id: str, customer_id: str
+    ) -> None:
+        """Прикрепление платёжного метода к покупателю(клиенту)"""
+        data = {"customer": customer_id}
+        await self._request(
+            method="POST",
+            endpoint=f"/payment_methods/{payment_method_id}/attach",
+            data=data,
+        )
 
 
 async def get_stripe() -> StripeClient:

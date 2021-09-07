@@ -17,7 +17,7 @@ class SubscriptionMovieInLine(admin.TabularInline):
 class SubscriptionAdmin(admin.ModelAdmin):
     """Подписки"""
 
-    list_display = ("id", "title", "period", "type", "price", "currency")
+    list_display = ("id", "title", "period", "type", "price", "currency", "automatic")
     search_fields = ("title", "period", "type")
     list_filter = ("period", "type", "automatic")
     inlines = [SubscriptionMovieInLine]

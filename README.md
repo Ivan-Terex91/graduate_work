@@ -17,14 +17,3 @@ Swagger - `http://127.0.0.1:8001/`
 
 # Administration service
 `http://127.0.0.1:8000/admin/`
-
-Ссылка на репозиторий https://github.com/Ivan-Terex91/graduate_work
-
-P.S. Забыл на встрече показать и рассказать, есть ещё блок схемы в Miro с жизненными циклами оформления, отказа от подписки и рекурентные платежи.
-
-
-[Исправления по ревью](https://github.com/Ivan-Terex91/graduate_work/pull/15)
-
-[Функциональные тесты](https://github.com/Ivan-Terex91/graduate_work/pull/16)
-
-[Исправление тестов](https://github.com/Ivan-Terex91/graduate_work/pull/19)
